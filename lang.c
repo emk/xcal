@@ -134,8 +134,6 @@ char **lang_load(char *lng, int *ns) {
       out[ix][len] = '\0';
     } else if (ix < num_lang_strs) {
       out[ix] = english_lang_str[ix];
-    } else {
-      out[ix] = lang_empty;
     }
   }
   /* If any unfilled strings are left over, make sure
