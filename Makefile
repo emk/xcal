@@ -6,7 +6,7 @@
 .PHONY: clean distclean dist
 
 CC=gcc
-CFLAGS=-Wall -Werror -O2 -funsigned-char
+CFLAGS=-Wall -Wno-unused-result -Werror -O2 -funsigned-char
 
 SRCS=cmd.c con.c lang.c mem.c message.c net.c log.c port.c stream.c telnet.c\
 	user.c val.c xhelp.c xcal.c
