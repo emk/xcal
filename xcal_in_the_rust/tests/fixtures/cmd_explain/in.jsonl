@@ -1,0 +1,13 @@
+{"comment": "Test explain command — topic lookup and error case"}
+{"conn": "master", "action": "connect"}
+{"conn": "master", "action": "expect", "contains": "master terminal"}
+{"conn": "master", "action": "send", "text": "Explorer"}
+{"conn": "master", "action": "expect", "contains": "Enter command"}
+{"conn": "master", "action": "send", "text": "explain who"}
+{"conn": "master", "action": "expect", "contains": "WHO"}
+{"conn": "master", "action": "drain"}
+{"conn": "master", "action": "send", "text": "explain zzznotreal"}
+{"conn": "master", "action": "expect", "contains": "Can't explain"}
+{"conn": "master", "action": "send", "text": "bye"}
+{"conn": "master", "action": "drain", "quiet_ms": 100}
+{"conn": "master", "action": "disconnect"}

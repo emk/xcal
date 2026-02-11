@@ -1,0 +1,49 @@
+{"comment": "Test im (impending) — no messages, direct build, tell-all build, empty-line alias"}
+{"conn": "master", "action": "connect"}
+{"conn": "master", "action": "expect", "contains": "master terminal"}
+{"conn": "master", "action": "send", "text": "Explorer"}
+{"conn": "master", "action": "expect", "contains": "Enter command"}
+{"conn": "user1", "action": "connect"}
+{"conn": "user1", "action": "expect", "contains": "enter your name"}
+{"conn": "user1", "action": "send", "text": "Wanderer"}
+{"conn": "user1", "action": "expect", "contains": "Enter command"}
+{"conn": "master", "action": "drain"}
+{"comment": "im with nobody building — expect No messages"}
+{"conn": "master", "action": "send", "text": "im"}
+{"conn": "master", "action": "expect", "contains": "No messages"}
+{"conn": "master", "action": "drain"}
+{"comment": "User1 starts building a direct message to master (#0)"}
+{"conn": "user1", "action": "send", "text": "t 0"}
+{"conn": "user1", "action": "expect", "contains": "Speak"}
+{"conn": "user1", "action": "send", "text": "Hello there"}
+{"comment": "Master checks im — should see Wanderer in B-0 state (building to #0)"}
+{"conn": "master", "action": "send", "text": "im"}
+{"conn": "master", "action": "expect", "contains": "B-0"}
+{"conn": "master", "action": "drain"}
+{"comment": "User1 finishes message (empty line)"}
+{"conn": "user1", "action": "send", "text": ""}
+{"comment": "Master receives the message"}
+{"conn": "master", "action": "expect", "contains": "Hello there"}
+{"conn": "master", "action": "drain"}
+{"comment": "im again — nobody building anymore"}
+{"conn": "master", "action": "send", "text": "im"}
+{"conn": "master", "action": "expect", "contains": "No messages"}
+{"conn": "master", "action": "drain"}
+{"comment": "User1 starts building a tell-all"}
+{"conn": "user1", "action": "send", "text": "te"}
+{"conn": "user1", "action": "expect", "contains": "Speak"}
+{"conn": "user1", "action": "send", "text": "Greetings all"}
+{"comment": "Master uses empty line (bare return = im) — should show B/A state"}
+{"conn": "master", "action": "send", "text": ""}
+{"conn": "master", "action": "expect", "contains": "B/A"}
+{"conn": "master", "action": "drain"}
+{"comment": "User1 finishes tell-all"}
+{"conn": "user1", "action": "send", "text": ""}
+{"conn": "master", "action": "expect", "contains": "Greetings all"}
+{"conn": "master", "action": "drain"}
+{"conn": "user1", "action": "drain"}
+{"conn": "master", "action": "send", "text": "bye"}
+{"conn": "master", "action": "drain", "quiet_ms": 100}
+{"conn": "user1", "action": "drain", "quiet_ms": 100}
+{"conn": "master", "action": "disconnect"}
+{"conn": "user1", "action": "disconnect"}

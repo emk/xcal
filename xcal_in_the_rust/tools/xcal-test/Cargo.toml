@@ -1,0 +1,17 @@
+[package]
+name = "xcal-test"
+version = "0.1.0"
+edition = "2021"
+license = "ISC OR MIT OR Apache-2.0"
+
+[[bin]]
+name = "xcal-test"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+miette = { version = "7", features = ["fancy"] }
+tokio = { version = "1", features = ["net", "time", "io-util", "macros", "rt-multi-thread"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+xcal_test_tools = { path = "../../crates/xcal_test_tools" }

@@ -1,0 +1,11 @@
+Hello.  You are the master terminal.
+Please enter your name. Explorer
+
+Enter command (type 'HELP' for instructions)
+Changes afoot!  Type EXPLAIN NEW for what's new!
+You are talking with #0: Explorer
+tty
+=>[#0] M COM    CN  Explorer
+bye
+
+Conference "XYZ" has terminated.

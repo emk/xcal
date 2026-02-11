@@ -1,0 +1,42 @@
+{"comment": "Test warn and dw — inline warn, WARN state prompt, display warning"}
+{"conn": "master", "action": "connect"}
+{"conn": "master", "action": "expect", "contains": "master terminal"}
+{"conn": "master", "action": "send", "text": "Explorer"}
+{"conn": "master", "action": "expect", "contains": "Enter command"}
+{"conn": "user1", "action": "connect"}
+{"conn": "user1", "action": "expect", "contains": "enter your name"}
+{"conn": "user1", "action": "send", "text": "Wanderer"}
+{"conn": "user1", "action": "expect", "contains": "Enter command"}
+{"conn": "master", "action": "drain"}
+{"comment": "dw with no warning set — just bells, drain it"}
+{"conn": "master", "action": "send", "text": "dw"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- Inline warn: wa <text> ---"}
+{"conn": "master", "action": "send", "text": "wa Attention please"}
+{"comment": "Warning delivered to user1 via message queue"}
+{"conn": "user1", "action": "expect", "contains": "Attention please"}
+{"conn": "user1", "action": "drain"}
+{"comment": "Drain master's queued copy of the warning"}
+{"conn": "master", "action": "drain"}
+{"comment": "dw shows the stored warning"}
+{"conn": "master", "action": "send", "text": "dw"}
+{"conn": "master", "action": "expect", "contains": "Attention please"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- WARN state: wa alone, then type text ---"}
+{"conn": "master", "action": "send", "text": "wa"}
+{"conn": "master", "action": "expect", "contains": "New warning"}
+{"conn": "master", "action": "send", "text": "System maintenance soon"}
+{"comment": "New warning delivered to user1"}
+{"conn": "user1", "action": "expect", "contains": "System maintenance soon"}
+{"conn": "user1", "action": "drain"}
+{"comment": "Drain master's queued copy"}
+{"conn": "master", "action": "drain"}
+{"comment": "dw shows the updated warning"}
+{"conn": "master", "action": "send", "text": "dw"}
+{"conn": "master", "action": "expect", "contains": "System maintenance soon"}
+{"conn": "master", "action": "drain"}
+{"conn": "master", "action": "send", "text": "bye"}
+{"conn": "master", "action": "drain", "quiet_ms": 100}
+{"conn": "user1", "action": "drain", "quiet_ms": 100}
+{"conn": "master", "action": "disconnect"}
+{"conn": "user1", "action": "disconnect"}

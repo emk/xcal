@@ -1,0 +1,9 @@
+{"comment": "Test stop command — alias for bye, ends conference when master uses it"}
+{"conn": "master", "action": "connect"}
+{"conn": "master", "action": "expect", "contains": "master terminal"}
+{"conn": "master", "action": "send", "text": "Explorer"}
+{"conn": "master", "action": "expect", "contains": "Enter command"}
+{"conn": "master", "action": "send", "text": "stop"}
+{"conn": "master", "action": "expect", "contains": "terminated"}
+{"conn": "master", "action": "drain", "quiet_ms": 100}
+{"conn": "master", "action": "disconnect"}

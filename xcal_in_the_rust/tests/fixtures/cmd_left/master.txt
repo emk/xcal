@@ -1,0 +1,22 @@
+Hello.  You are the master terminal.
+Please enter your name. Explorer
+
+Enter command (type 'HELP' for instructions)
+Changes afoot!  Type EXPLAIN NEW for what's new!
+You are talking with #0: Explorer
+
+New user at #1: Wanderer
+left
+
+No one has left
+
+Ex-user at #1: Wanderer
+left
+
+Xcaliber up at  5:42:12 p.m.
+001 Users have left Xcaliber
+ Left  Name
+05:42  Wanderer
+bye
+
+Conference "XYZ" has terminated.

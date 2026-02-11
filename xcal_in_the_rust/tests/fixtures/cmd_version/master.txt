@@ -1,0 +1,13 @@
+Hello.  You are the master terminal.
+Please enter your name. Explorer
+
+Enter command (type 'HELP' for instructions)
+Changes afoot!  Type EXPLAIN NEW for what's new!
+You are talking with #0: Explorer
+version
+
+Xcaliber II v.1.32 by Michael J. Fromberger
+Copyright (C) 1997-1998 All Rights Reserved
+bye
+
+Conference "XYZ" has terminated.

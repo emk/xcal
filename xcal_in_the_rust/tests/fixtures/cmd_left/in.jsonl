@@ -1,0 +1,28 @@
+{"comment": "Test left command — no departures, then normal departure"}
+{"conn": "master", "action": "connect"}
+{"conn": "master", "action": "expect", "contains": "master terminal"}
+{"conn": "master", "action": "send", "text": "Explorer"}
+{"conn": "master", "action": "expect", "contains": "Enter command"}
+{"conn": "user1", "action": "connect"}
+{"conn": "user1", "action": "expect", "contains": "enter your name"}
+{"conn": "user1", "action": "send", "text": "Wanderer"}
+{"conn": "user1", "action": "expect", "contains": "Enter command"}
+{"conn": "master", "action": "drain"}
+{"comment": "No one has left yet"}
+{"conn": "master", "action": "send", "text": "left"}
+{"conn": "master", "action": "expect", "contains": "No one has left"}
+{"conn": "master", "action": "drain"}
+{"comment": "User1 departs normally via bye"}
+{"conn": "user1", "action": "send", "text": "bye"}
+{"conn": "user1", "action": "drain", "quiet_ms": 100}
+{"conn": "user1", "action": "disconnect"}
+{"comment": "Master gets departure notification"}
+{"conn": "master", "action": "expect", "contains": "Ex-user"}
+{"conn": "master", "action": "drain"}
+{"comment": "Left list should show Wanderer (normal departure, no K marker)"}
+{"conn": "master", "action": "send", "text": "left"}
+{"conn": "master", "action": "expect", "contains": "Wanderer"}
+{"conn": "master", "action": "drain"}
+{"conn": "master", "action": "send", "text": "bye"}
+{"conn": "master", "action": "drain", "quiet_ms": 100}
+{"conn": "master", "action": "disconnect"}

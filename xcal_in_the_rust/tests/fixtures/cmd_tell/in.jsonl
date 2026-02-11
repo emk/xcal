@@ -1,0 +1,35 @@
+{"comment": "Test tell command — direct message, tell-all, and inline tell-all"}
+{"conn": "master", "action": "connect"}
+{"conn": "master", "action": "expect", "contains": "master terminal"}
+{"conn": "master", "action": "send", "text": "Explorer"}
+{"conn": "master", "action": "expect", "contains": "Enter command"}
+{"conn": "user1", "action": "connect"}
+{"conn": "user1", "action": "expect", "contains": "enter your name"}
+{"conn": "user1", "action": "send", "text": "Wanderer"}
+{"conn": "user1", "action": "expect", "contains": "Enter command"}
+{"conn": "master", "action": "drain"}
+{"comment": "Direct message from master to user1 using BUILD state"}
+{"conn": "master", "action": "send", "text": "t 1"}
+{"conn": "master", "action": "expect", "contains": "Speak"}
+{"conn": "master", "action": "send", "text": "Hello from master"}
+{"conn": "master", "action": "send", "text": ""}
+{"conn": "user1", "action": "expect", "contains": "Hello from master"}
+{"conn": "user1", "action": "drain"}
+{"comment": "Tell-all from user1 using BUILD state"}
+{"conn": "user1", "action": "send", "text": "te"}
+{"conn": "user1", "action": "expect", "contains": "Speak"}
+{"conn": "user1", "action": "send", "text": "Greetings everyone"}
+{"conn": "user1", "action": "send", "text": ""}
+{"conn": "master", "action": "expect", "contains": "Greetings everyone"}
+{"conn": "master", "action": "drain"}
+{"conn": "user1", "action": "drain"}
+{"comment": "Inline tell-all from master"}
+{"conn": "master", "action": "send", "text": "te;Farewell all"}
+{"conn": "user1", "action": "expect", "contains": "Farewell all"}
+{"conn": "user1", "action": "drain"}
+{"conn": "master", "action": "drain"}
+{"conn": "master", "action": "send", "text": "bye"}
+{"conn": "master", "action": "drain", "quiet_ms": 100}
+{"conn": "user1", "action": "drain", "quiet_ms": 100}
+{"conn": "master", "action": "disconnect"}
+{"conn": "user1", "action": "disconnect"}

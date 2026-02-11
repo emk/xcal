@@ -1,0 +1,40 @@
+{"comment": "Test rall/aall — reject and accept tell-all messages, R flag in WHO"}
+{"conn": "master", "action": "connect"}
+{"conn": "master", "action": "expect", "contains": "master terminal"}
+{"conn": "master", "action": "send", "text": "Explorer"}
+{"conn": "master", "action": "expect", "contains": "Enter command"}
+{"conn": "user1", "action": "connect"}
+{"conn": "user1", "action": "expect", "contains": "enter your name"}
+{"conn": "user1", "action": "send", "text": "Wanderer"}
+{"conn": "user1", "action": "expect", "contains": "Enter command"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- User1 rejects alls ---"}
+{"conn": "user1", "action": "send", "text": "ra"}
+{"conn": "user1", "action": "expect", "contains": "Done"}
+{"conn": "user1", "action": "drain"}
+{"comment": "Master WHO shows R flag on Wanderer (rejecting alls)"}
+{"conn": "master", "action": "send", "text": "who"}
+{"conn": "master", "action": "expect", "contains": "R"}
+{"conn": "master", "action": "drain"}
+{"comment": "Master inline tell-all fails — no valid recipients"}
+{"conn": "master", "action": "send", "text": "te;Hello all"}
+{"conn": "master", "action": "expect", "contains": "Invalid"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- User1 accepts alls ---"}
+{"conn": "user1", "action": "send", "text": "aa"}
+{"conn": "user1", "action": "expect", "contains": "Done"}
+{"conn": "user1", "action": "drain"}
+{"comment": "Master WHO — R flag gone"}
+{"conn": "master", "action": "send", "text": "who"}
+{"conn": "master", "action": "expect", "contains": "Wanderer"}
+{"conn": "master", "action": "drain"}
+{"comment": "Master inline tell-all now succeeds"}
+{"conn": "master", "action": "send", "text": "te;Hello all"}
+{"conn": "user1", "action": "expect", "contains": "Hello all"}
+{"conn": "user1", "action": "drain"}
+{"conn": "master", "action": "drain"}
+{"conn": "master", "action": "send", "text": "bye"}
+{"conn": "master", "action": "drain", "quiet_ms": 100}
+{"conn": "user1", "action": "drain", "quiet_ms": 100}
+{"conn": "master", "action": "disconnect"}
+{"conn": "user1", "action": "disconnect"}

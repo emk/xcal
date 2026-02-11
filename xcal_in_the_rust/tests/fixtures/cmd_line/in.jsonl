@@ -1,0 +1,12 @@
+{"comment": "Test line command — line mode holds messages, runs one command"}
+{"conn": "master", "action": "connect"}
+{"conn": "master", "action": "expect", "contains": "master terminal"}
+{"conn": "master", "action": "send", "text": "Explorer"}
+{"conn": "master", "action": "expect", "contains": "Enter command"}
+{"conn": "master", "action": "send", "text": "line"}
+{"conn": "master", "action": "expect", "contains": "Command line"}
+{"conn": "master", "action": "send", "text": "tty"}
+{"conn": "master", "action": "expect", "contains": "Explorer"}
+{"conn": "master", "action": "send", "text": "bye"}
+{"conn": "master", "action": "drain", "quiet_ms": 100}
+{"conn": "master", "action": "disconnect"}

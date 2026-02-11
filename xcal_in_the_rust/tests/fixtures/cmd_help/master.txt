@@ -1,0 +1,55 @@
+Hello.  You are the master terminal.
+Please enter your name. Explorer
+
+Enter command (type 'HELP' for instructions)
+Changes afoot!  Type EXPLAIN NEW for what's new!
+You are talking with #0: Explorer
+help
+
+General information on Xcaliber:
+
+    The commands detailed below are fairly easy and are more or less all
+that a beginner needs to know.  For a list of other commands and what they
+do, type
+        EXP Commands
+    Note that any command may be abbreviated to two letters, and some of the
+more common ones to a single letter.
+
+Tell    To send a message to someone, just type TELL followed by their number.
+----    When the terminal prints "Speak!", type your message.  To finish the
+        message,bye
+ type an EXTRA carriage return.  For information on how to send
+        to more than one person, or to everyone, type EXPLAIN TELL.  Since this
+        command is used so much, you can type JUST the number of the person you
+        want to talk to, without the TELL command before it.
+
+Who     The WHO command gives you a list of the other people on the conference
+---     with you.  It tells you each user's number, and other information about
+        them.  For more information, type EXPLAIN WHO.
+
+BYe     Typing BYE (or STOP) will disconnect you from the conference.
+---
+
+Port    The PORT command gives you a list of users and where they are (type
+----    EXPLAIN PORT).
+
+Explain Typing EXPLAIN (or E) and then a topic will give you an explanation for
+------- that topic.  Type EXPLAIN TOPICS for a list of "explainable" topics.
+
+HElp    Prints out these instructions.
+----
+
+ID      If you want to change your name, just type ID followed by the new name
+--      you want (type EXPLAIN ID for more information).
+
+IM      The IMPENDING command gives you a list of users who are currently
+--      building a message to you.  An empty command line (just pressing
+        the "return" key) is the same as typing IM.
+
+RA      The RA (Reject Alls) command can be used if you don't want to receive
+--      messages broadcast to everyone.  This is useful if you're on a slow-
+        speed terminal and are getting swamped with messages  (type EXPLAIN
+        RA for information on such things as how undo the RA command).
+
+
+Conference "XYZ" has terminated.

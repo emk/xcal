@@ -1,0 +1,43 @@
+{"comment": "Test listing commands with two users: who, port, everything (a, al), users, number"}
+{"conn": "master", "action": "connect"}
+{"conn": "master", "action": "expect", "contains": "master terminal"}
+{"conn": "master", "action": "send", "text": "Explorer"}
+{"conn": "master", "action": "expect", "contains": "Enter command"}
+{"conn": "user1", "action": "connect"}
+{"conn": "user1", "action": "expect", "contains": "enter your name"}
+{"conn": "user1", "action": "send", "text": "Wanderer"}
+{"conn": "user1", "action": "expect", "contains": "Enter command"}
+{"conn": "master", "action": "drain"}
+{"comment": "who — expect Wanderer (listed after Explorer, so both present)"}
+{"conn": "master", "action": "send", "text": "who"}
+{"conn": "master", "action": "expect", "contains": "Wanderer"}
+{"conn": "master", "action": "drain"}
+{"comment": "port — should show port info with slash format"}
+{"conn": "master", "action": "send", "text": "port"}
+{"conn": "master", "action": "expect", "contains": "/"}
+{"conn": "master", "action": "drain"}
+{"comment": "everything — combined who+port, both users"}
+{"conn": "master", "action": "send", "text": "everything"}
+{"conn": "master", "action": "expect", "contains": "Wanderer"}
+{"conn": "master", "action": "drain"}
+{"comment": "a — alias for everything"}
+{"conn": "master", "action": "send", "text": "a"}
+{"conn": "master", "action": "expect", "contains": "Wanderer"}
+{"conn": "master", "action": "drain"}
+{"comment": "al — alias for everything"}
+{"conn": "master", "action": "send", "text": "al"}
+{"conn": "master", "action": "expect", "contains": "Wanderer"}
+{"conn": "master", "action": "drain"}
+{"comment": "users — should report 2 users"}
+{"conn": "master", "action": "send", "text": "users"}
+{"conn": "master", "action": "expect", "contains": "2"}
+{"conn": "master", "action": "drain"}
+{"comment": "number — alias for users, also 2"}
+{"conn": "master", "action": "send", "text": "number"}
+{"conn": "master", "action": "expect", "contains": "2"}
+{"conn": "master", "action": "drain"}
+{"conn": "master", "action": "send", "text": "bye"}
+{"conn": "master", "action": "drain", "quiet_ms": 100}
+{"conn": "user1", "action": "drain", "quiet_ms": 100}
+{"conn": "master", "action": "disconnect"}
+{"conn": "user1", "action": "disconnect"}

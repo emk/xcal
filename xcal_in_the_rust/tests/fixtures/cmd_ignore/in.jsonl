@@ -1,0 +1,81 @@
+{"comment": "Test ignore/accept commands and WHO status flags (I/X/B)"}
+{"conn": "master", "action": "connect"}
+{"conn": "master", "action": "expect", "contains": "master terminal"}
+{"conn": "master", "action": "send", "text": "Explorer"}
+{"conn": "master", "action": "expect", "contains": "Enter command"}
+{"conn": "user1", "action": "connect"}
+{"conn": "user1", "action": "expect", "contains": "enter your name"}
+{"conn": "user1", "action": "send", "text": "Wanderer"}
+{"conn": "user1", "action": "expect", "contains": "Enter command"}
+{"conn": "master", "action": "drain"}
+{"comment": "Baseline WHO — both users, no ignore flags, CN (RC+AN) shown"}
+{"conn": "master", "action": "send", "text": "who"}
+{"conn": "master", "action": "expect", "contains": "Wanderer"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- Master ignores user1: ig 1 ---"}
+{"conn": "master", "action": "send", "text": "ig 1"}
+{"conn": "master", "action": "expect", "contains": "Done"}
+{"conn": "master", "action": "drain"}
+{"comment": "Master WHO: I flag on Wanderer (you're ignoring them)"}
+{"conn": "master", "action": "send", "text": "who"}
+{"conn": "master", "action": "expect", "contains": "I"}
+{"conn": "master", "action": "drain"}
+{"comment": "User1 WHO: X flag on Explorer (they're ignoring you)"}
+{"conn": "user1", "action": "send", "text": "who"}
+{"conn": "user1", "action": "expect", "contains": "X"}
+{"conn": "user1", "action": "drain"}
+{"comment": "--- Master accepts user1: ac 1 ---"}
+{"conn": "master", "action": "send", "text": "ac 1"}
+{"conn": "master", "action": "expect", "contains": "Done"}
+{"conn": "master", "action": "drain"}
+{"comment": "Master WHO: flags cleared, Wanderer visible without I/X"}
+{"conn": "master", "action": "send", "text": "who"}
+{"conn": "master", "action": "expect", "contains": "Wanderer"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- User1 ignores all: ig (no args) ---"}
+{"conn": "user1", "action": "send", "text": "ig"}
+{"conn": "user1", "action": "expect", "contains": "Done"}
+{"conn": "user1", "action": "drain"}
+{"comment": "User1 WHO: I flag on Explorer (you're ignoring them)"}
+{"conn": "user1", "action": "send", "text": "who"}
+{"conn": "user1", "action": "expect", "contains": "I"}
+{"conn": "user1", "action": "drain"}
+{"comment": "Master WHO: X flag on Wanderer (they're ignoring you)"}
+{"conn": "master", "action": "send", "text": "who"}
+{"conn": "master", "action": "expect", "contains": "X"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- User1 accepts all: ac (no args) ---"}
+{"conn": "user1", "action": "send", "text": "ac"}
+{"conn": "user1", "action": "expect", "contains": "Done"}
+{"conn": "user1", "action": "drain"}
+{"comment": "--- Mutual ignore: both ignore each other ---"}
+{"conn": "master", "action": "send", "text": "ig 1"}
+{"conn": "master", "action": "expect", "contains": "Done"}
+{"conn": "master", "action": "drain"}
+{"conn": "user1", "action": "send", "text": "ig 0"}
+{"conn": "user1", "action": "expect", "contains": "Done"}
+{"conn": "user1", "action": "drain"}
+{"comment": "Master WHO: B flag on Wanderer (mutual ignore)"}
+{"conn": "master", "action": "send", "text": "who"}
+{"conn": "master", "action": "expect", "contains": "B"}
+{"conn": "master", "action": "drain"}
+{"comment": "User1 WHO: B flag on Explorer (mutual ignore)"}
+{"conn": "user1", "action": "send", "text": "who"}
+{"conn": "user1", "action": "expect", "contains": "B"}
+{"conn": "user1", "action": "drain"}
+{"comment": "--- Accept all from both sides, verify clean ---"}
+{"conn": "master", "action": "send", "text": "ac"}
+{"conn": "master", "action": "expect", "contains": "Done"}
+{"conn": "master", "action": "drain"}
+{"conn": "user1", "action": "send", "text": "ac"}
+{"conn": "user1", "action": "expect", "contains": "Done"}
+{"conn": "user1", "action": "drain"}
+{"comment": "Final WHO — no ignore flags"}
+{"conn": "master", "action": "send", "text": "who"}
+{"conn": "master", "action": "expect", "contains": "Wanderer"}
+{"conn": "master", "action": "drain"}
+{"conn": "master", "action": "send", "text": "bye"}
+{"conn": "master", "action": "drain", "quiet_ms": 100}
+{"conn": "user1", "action": "drain", "quiet_ms": 100}
+{"conn": "master", "action": "disconnect"}
+{"conn": "user1", "action": "disconnect"}

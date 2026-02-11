@@ -1,0 +1,14 @@
+Hello.  You are the master terminal.
+Please enter your name. Explorer
+
+Enter command (type 'HELP' for instructions)
+Changes afoot!  Type EXPLAIN NEW for what's new!
+You are talking with #0: Explorer
+time
+
+Up at 2:48:32 p.m. on 2/10/26
+Time now: 2:48:32 p.m.
+Time left:  45 minute(s)
+bye
+
+Conference "XYZ" has terminated.

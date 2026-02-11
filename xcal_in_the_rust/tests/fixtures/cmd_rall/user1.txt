@@ -1,0 +1,17 @@
+Hello.  Welcome to Xcaliber.
+Please enter your name--Wanderer
+
+Enter command (type 'HELP' for instructions)
+Changes afoot!  Type EXPLAIN NEW for what's new!
+You are talking with #0: Explorer
+ra
+
+Done
+aa
+
+Done
+
+Message to all from #0: Explorer
+Hello all
+
+Conference "XYZ" has terminated.

@@ -1,0 +1,13 @@
+Hello.  You are the master terminal.
+Please enter your name. Explorer
+
+Enter command (type 'HELP' for instructions)
+Changes afoot!  Type EXPLAIN NEW for what's new!
+You are talking with #0: Explorer
+
+New user at #1: Wanderer
+
+New name for #1: Traveler
+bye
+
+Conference "XYZ" has terminated.

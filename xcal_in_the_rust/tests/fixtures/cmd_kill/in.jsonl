@@ -1,0 +1,25 @@
+{"comment": "Test kill command — master kills user, verify K marker in left"}
+{"conn": "master", "action": "connect"}
+{"conn": "master", "action": "expect", "contains": "master terminal"}
+{"conn": "master", "action": "send", "text": "Explorer"}
+{"conn": "master", "action": "expect", "contains": "Enter command"}
+{"conn": "user1", "action": "connect"}
+{"conn": "user1", "action": "expect", "contains": "enter your name"}
+{"conn": "user1", "action": "send", "text": "Wanderer"}
+{"conn": "user1", "action": "expect", "contains": "Enter command"}
+{"conn": "master", "action": "drain"}
+{"comment": "Master kills user1"}
+{"conn": "master", "action": "send", "text": "ki 1"}
+{"conn": "master", "action": "expect", "contains": "Done"}
+{"conn": "master", "action": "drain"}
+{"comment": "User1 gets disconnect message, server closes socket"}
+{"conn": "user1", "action": "drain", "quiet_ms": 100}
+{"conn": "user1", "action": "disconnect"}
+{"comment": "Left list should show Wanderer with K marker (killed)"}
+{"comment": "Sending left also triggers delivery of queued kill notification"}
+{"conn": "master", "action": "send", "text": "left"}
+{"conn": "master", "action": "expect", "contains": "K Wanderer"}
+{"conn": "master", "action": "drain"}
+{"conn": "master", "action": "send", "text": "bye"}
+{"conn": "master", "action": "drain", "quiet_ms": 100}
+{"conn": "master", "action": "disconnect"}

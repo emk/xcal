@@ -1,0 +1,6 @@
+# Run all our pre-commit checks.
+check:
+    cargo fmt -- --check # +nightly is even better, but not always available.
+    cargo clippy --all-targets --all-features -- -D warnings
+    cargo deny check
+    cargo test --all-features

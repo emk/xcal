@@ -1,0 +1,32 @@
+Hello.  Welcome to Xcaliber.
+Please enter your name--Wanderer
+
+Enter command (type 'HELP' for instructions)
+Changes afoot!  Type EXPLAIN NEW for what's new!
+You are talking with #0: Explorer
+who
+
+=>[#0] M ---  X CN  Explorer
+  [#1]   COM    CN  Wanderer
+ig
+
+Done
+who
+
+=>[#0] M ---  I CN  Explorer
+  [#1]   COM    CN  Wanderer
+ac
+
+Done
+ig 0
+
+Done
+who
+
+=>[#0] M ---  B CN  Explorer
+  [#1]   COM    CN  Wanderer
+ac
+
+Done
+
+Conference "XYZ" has terminated.

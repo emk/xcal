@@ -1,0 +1,20 @@
+Hello.  You are the master terminal.
+Please enter your name. Explorer
+
+Enter command (type 'HELP' for instructions)
+Changes afoot!  Type EXPLAIN NEW for what's new!
+You are talking with #0: Explorer
+info
+
+Up at 2:48:31 p.m. on 2/10/26
+Time now: 2:48:31 p.m.
+Time left:  45 minute(s)
+ Users: 1
+   max: 1
+Server: xcal v.1.32
+Core size: 9312K
+CRUs now:  0.000
+     max:  -1
+bye
+
+Conference "XYZ" has terminated.

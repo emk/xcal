@@ -1,0 +1,13 @@
+Hello.  You are the master terminal.
+Please enter your name. Explorer
+
+Enter command (type 'HELP' for instructions)
+Changes afoot!  Type EXPLAIN NEW for what's new!
+You are talking with #0: Explorer
+runtime
+
+CRUs now:  0.000
+     max:  -1
+bye
+
+Conference "XYZ" has terminated.
