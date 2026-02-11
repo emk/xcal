@@ -88,19 +88,19 @@ The Details
    directories yourself.  Assuming you are using the default values for these,
    you need to create the following directories:
 
-       /usr/local/lib/xcal
-       /usr/local/lib/xcal/help
-       /usr/local/lib/xcal/lang
+       /usr/local/share/xcal
+       /usr/local/share/xcal/help
+       /usr/local/share/xcal/lang
 
    Into the help directory, you need to copy all the help files from the `help`
    subdirectory of the source tree:
 
-       cp help/*.hf /usr/local/lib/xcal/help
+       cp help/*.hf /usr/local/share/xcal/help
 
    You should also generate and copy the help system's "table of contents"
    file:
 
-       cp help/exptoc.x /usr/local/lib/xcal/help
+       cp help/exptoc.x /usr/local/share/xcal/help
 
    If you do not have this file, it can be regenerated from the textfile
    help/raw-toc.txt by the following sequence of commands:
@@ -131,7 +131,7 @@ string table before XCaliber II can use them.  This is accomplished by the
 
 If you wish to install alternate language files, you should use 'mklang' to
 generate a '.lx' file for each language you wish to install, and then copy
-these files to /usr/local/lib/xcal/lang (or wherever you have put the languages
+these files to /usr/local/share/xcal/lang (or wherever you have put the languages
 directory for your installation).  The distribution currently includes English,
 French (translated by Ernie Trujillo), Scottish Gaelic (translated by Grace
 Alden and the membership of the GAIDHLIG-B mailing list), and a crude German
