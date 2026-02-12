@@ -1,11 +1,14 @@
 //! Xcaliber Mark II — Rust edition (stub).
 
+mod conferences;
 mod help;
+mod lang;
 mod matching;
 mod messages;
+mod users;
 
 use help::HelpTopics;
-use messages::{keys, FluentArgs, Messages};
+use lang::{keys, FluentArgs, Messages};
 
 fn main() {
     let m = Messages::new();

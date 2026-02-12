@@ -169,6 +169,9 @@ RUST_LOG=xcal_test=trace cargo run -p xcal-test -- run ...  # full I/O
 
 Within the project root directory, you have broad privileges to work inside the sandbox without user confirmation. To prevent tasks being halted for user permission, you will often want to `cd` to the root of the project, and to prefer your built-in search and read tools. Trying to construct absolute paths or paths using `~/` may trigger unnecessary approval prompts.
 
+- BAD: `~/w/src/xcal/foo`
+- GOOD: cd to project root, use `foo`
+
 ## A note about DCTS I/O
 
 Many DCTS terminal applications appear to have used line-oriented I/O modes, with single-line editing done on the terminal. This allowed entire lines to be sent as a single network message, making more efficient use of the mainframe CPU. This assumption seems to be largely present in Xcaliber Mark II.

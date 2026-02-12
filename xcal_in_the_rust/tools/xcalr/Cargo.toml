@@ -12,6 +12,8 @@ path = "src/main.rs"
 workspace = true
 
 [dependencies]
+bytes = "1"
 fluent-bundle = "0.15"
 intl-memoizer = "0.5"
+tokio = { version = "1", features = ["net"] }
 unic-langid = "0.9"

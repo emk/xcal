@@ -1019,8 +1019,10 @@ dependencies = [
 name = "xcalr"
 version = "0.1.0"
 dependencies = [
+ "bytes",
  "fluent-bundle",
  "intl-memoizer",
+ "tokio",
  "unic-langid",
 ]
 
