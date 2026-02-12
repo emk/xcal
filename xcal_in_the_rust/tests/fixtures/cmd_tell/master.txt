@@ -6,16 +6,50 @@ Changes afoot!  Type EXPLAIN NEW for what's new!
 You are talking with #0: Explorer
 
 New user at #1: Wanderer
+
+New user at #2: Traveler
 t 1
 
 Speak!
 Hello from master
 
 Message sent
+1
+
+Speak!
+Bare number works
+
+Message sent
+t 1;Inline direct
+
+Message sent
+1;Inline bare
+
+Message sent
+1,2
+
+Speak!
+To both of you
+
+Message sent
+
+Message from #1: Wanderer
+Line one
+Line two
+Line three
 
 Message to all from #1: Wanderer
 Greetings everyone
-te;Farewell all
+te;Broadcast inline
+
+Message sent
+t 1
+
+Speak!
+You should not see this%k
+
+Message not sent
+t 1;Still here
 
 Message sent
 bye

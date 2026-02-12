@@ -1,0 +1,102 @@
+{"comment": "Nested subconferences — 3-level nesting, WHO visibility, tell isolation"}
+{"conn": "master", "action": "connect"}
+{"conn": "master", "action": "expect", "contains": "master terminal"}
+{"conn": "master", "action": "send", "text": "Explorer"}
+{"conn": "master", "action": "expect", "contains": "Enter command"}
+{"conn": "user1", "action": "connect"}
+{"conn": "user1", "action": "expect", "contains": "enter your name"}
+{"conn": "user1", "action": "send", "text": "Alpha"}
+{"conn": "user1", "action": "expect", "contains": "Enter command"}
+{"conn": "user2", "action": "connect"}
+{"conn": "user2", "action": "expect", "contains": "enter your name"}
+{"conn": "user2", "action": "send", "text": "Bravo"}
+{"conn": "user2", "action": "expect", "contains": "Enter command"}
+{"conn": "user3", "action": "connect"}
+{"conn": "user3", "action": "expect", "contains": "enter your name"}
+{"conn": "user3", "action": "send", "text": "Charlie"}
+{"conn": "user3", "action": "expect", "contains": "Enter command"}
+{"conn": "master", "action": "drain"}
+{"conn": "user1", "action": "drain"}
+{"conn": "user2", "action": "drain"}
+{"conn": "user3", "action": "drain"}
+{"comment": "--- Build 3-level tree: master -> user1 (submaster) -> user2 (sub-submaster) -> user3 ---"}
+{"comment": "Level 1: master promotes user1, gives user2+user3"}
+{"conn": "master", "action": "send", "text": "mt 1"}
+{"conn": "master", "action": "expect", "contains": "Done"}
+{"conn": "user1", "action": "expect", "contains": "You are now a master terminal"}
+{"conn": "user1", "action": "drain"}
+{"conn": "master", "action": "drain"}
+{"conn": "master", "action": "send", "text": "gi 1;2,3"}
+{"conn": "master", "action": "expect", "contains": "Done"}
+{"conn": "user1", "action": "expect", "contains": "You have been passed"}
+{"conn": "user1", "action": "drain"}
+{"conn": "user2", "action": "expect", "contains": "You are talking with #1: Alpha"}
+{"conn": "user2", "action": "drain"}
+{"conn": "user3", "action": "expect", "contains": "You are talking with #1: Alpha"}
+{"conn": "user3", "action": "drain"}
+{"conn": "master", "action": "drain"}
+{"comment": "Level 2: user1 promotes user2, gives user3"}
+{"conn": "user1", "action": "send", "text": "mt 2"}
+{"conn": "user1", "action": "expect", "contains": "Done"}
+{"conn": "user2", "action": "expect", "contains": "You are now a master terminal"}
+{"conn": "user2", "action": "drain"}
+{"conn": "user1", "action": "drain"}
+{"conn": "user1", "action": "send", "text": "gi 2;3"}
+{"conn": "user1", "action": "expect", "contains": "Done"}
+{"conn": "user2", "action": "expect", "contains": "You have been passed"}
+{"conn": "user2", "action": "drain"}
+{"conn": "user3", "action": "expect", "contains": "You are talking with #2: Bravo"}
+{"conn": "user3", "action": "drain"}
+{"conn": "user1", "action": "drain"}
+{"comment": "--- WHO at each level ---"}
+{"comment": "Master: sees Explorer + Alpha only"}
+{"conn": "master", "action": "send", "text": "who"}
+{"conn": "master", "action": "expect", "contains": "Alpha"}
+{"conn": "master", "action": "drain"}
+{"comment": "User1 (submaster): sees Explorer + Alpha + Bravo (NOT Charlie)"}
+{"conn": "user1", "action": "send", "text": "who"}
+{"conn": "user1", "action": "expect", "contains": "Bravo"}
+{"conn": "user1", "action": "drain"}
+{"comment": "User2 (sub-submaster): sees Alpha + Bravo + Charlie"}
+{"conn": "user2", "action": "send", "text": "who"}
+{"conn": "user2", "action": "expect", "contains": "Charlie"}
+{"conn": "user2", "action": "drain"}
+{"comment": "User3: sees Bravo + Charlie only"}
+{"conn": "user3", "action": "send", "text": "who"}
+{"conn": "user3", "action": "expect", "contains": "Bravo"}
+{"conn": "user3", "action": "drain"}
+{"comment": "--- Tell isolation across levels ---"}
+{"comment": "User3 can't reach master"}
+{"conn": "user3", "action": "send", "text": "t 0;msg to master"}
+{"conn": "user3", "action": "expect", "contains": "Invalid argument"}
+{"conn": "user3", "action": "drain"}
+{"comment": "User3 can't reach user1"}
+{"conn": "user3", "action": "send", "text": "t 1;msg to user1"}
+{"conn": "user3", "action": "expect", "contains": "Invalid argument"}
+{"conn": "user3", "action": "drain"}
+{"comment": "User3 CAN reach user2 (sub-submaster)"}
+{"conn": "user3", "action": "send", "text": "t 2;Hello sub-submaster"}
+{"conn": "user2", "action": "expect", "contains": "Hello sub-submaster"}
+{"conn": "user2", "action": "drain"}
+{"conn": "user3", "action": "drain"}
+{"comment": "--- Tell-all isolation: user3 tell-all reaches user2 only ---"}
+{"conn": "user3", "action": "send", "text": "te;From depth 3"}
+{"conn": "user2", "action": "expect", "contains": "From depth 3"}
+{"conn": "user2", "action": "drain"}
+{"conn": "user3", "action": "drain"}
+{"conn": "user1", "action": "drain", "quiet_ms": 500}
+{"conn": "master", "action": "drain", "quiet_ms": 500}
+{"comment": "--- Everything still shows all ---"}
+{"conn": "master", "action": "send", "text": "a"}
+{"conn": "master", "action": "expect", "contains": "Charlie"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- Cleanup ---"}
+{"conn": "master", "action": "send", "text": "bye"}
+{"conn": "master", "action": "drain", "quiet_ms": 100}
+{"conn": "user1", "action": "drain", "quiet_ms": 100}
+{"conn": "user2", "action": "drain", "quiet_ms": 100}
+{"conn": "user3", "action": "drain", "quiet_ms": 100}
+{"conn": "master", "action": "disconnect"}
+{"conn": "user1", "action": "disconnect"}
+{"conn": "user2", "action": "disconnect"}
+{"conn": "user3", "action": "disconnect"}

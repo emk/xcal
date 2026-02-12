@@ -1,0 +1,42 @@
+{"comment": "Test rc/oc — reject/okay controls, C flag in WHO"}
+{"conn": "master", "action": "connect"}
+{"conn": "master", "action": "expect", "contains": "master terminal"}
+{"conn": "master", "action": "send", "text": "Explorer"}
+{"conn": "master", "action": "expect", "contains": "Enter command"}
+{"conn": "user1", "action": "connect"}
+{"conn": "user1", "action": "expect", "contains": "enter your name"}
+{"conn": "user1", "action": "send", "text": "Wanderer"}
+{"conn": "user1", "action": "expect", "contains": "Enter command"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- Default state: RC active — C flag in WHO ---"}
+{"conn": "master", "action": "send", "text": "who"}
+{"conn": "master", "action": "expect", "contains": "C"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- Master does OC — allow controls through ---"}
+{"conn": "master", "action": "send", "text": "oc"}
+{"conn": "master", "action": "expect", "contains": "Done"}
+{"conn": "master", "action": "drain"}
+{"comment": "WHO — C flag gone on master"}
+{"conn": "master", "action": "send", "text": "who"}
+{"conn": "master", "action": "expect", "contains": "Explorer"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- User1 sends tell with BEL char — master (OC) should see it ---"}
+{"conn": "user1", "action": "send", "text": "t 0;Hello\u0007World"}
+{"conn": "master", "action": "expect", "contains": "Hello\u0007World"}
+{"conn": "master", "action": "drain"}
+{"conn": "user1", "action": "drain"}
+{"comment": "--- Master does RC — reject controls again ---"}
+{"conn": "master", "action": "send", "text": "rc"}
+{"conn": "master", "action": "expect", "contains": "Done"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- User1 sends same tell — master (RC) should see BEL stripped ---"}
+{"conn": "user1", "action": "send", "text": "t 0;Hello\u0007World"}
+{"conn": "master", "action": "expect", "contains": "HelloWorld"}
+{"conn": "master", "action": "drain"}
+{"conn": "user1", "action": "drain"}
+{"comment": "--- Cleanup ---"}
+{"conn": "master", "action": "send", "text": "bye"}
+{"conn": "master", "action": "drain", "quiet_ms": 100}
+{"conn": "user1", "action": "drain", "quiet_ms": 100}
+{"conn": "master", "action": "disconnect"}
+{"conn": "user1", "action": "disconnect"}

@@ -4,9 +4,20 @@ Please enter your name. Explorer
 Enter command (type 'HELP' for instructions)
 Changes afoot!  Type EXPLAIN NEW for what's new!
 You are talking with #0: Explorer
+
+New user at #1: Wanderer
+port
+
+=>[#0]  Boston   0/0001 Explorer
+  [#1]  Boston   0/0001 Wanderer
 who
 
 =>[#0] M COM    CN  Explorer
+  [#1]   ---   PCN  Wanderer
+port
+
+=>[#0]  Boston   0/0001 Explorer
+  [#1]  Rejecting ports Wanderer
 bye
 
 Conference "XYZ" has terminated.

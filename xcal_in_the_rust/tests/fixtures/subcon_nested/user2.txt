@@ -1,0 +1,28 @@
+Hello.  Welcome to Xcaliber.
+Please enter your name--Bravo
+
+Enter command (type 'HELP' for instructions)
+Changes afoot!  Type EXPLAIN NEW for what's new!
+You are talking with #0: Explorer
+
+New user at #3: Charlie
+
+You are talking with #1: Alpha
+
+You are now a master terminal
+
+You have been passed
+  [#3]   ---    CN  Charlie
+who
+
+  [#1] M ---    CN  Alpha
+  [#2] M COM    CN  Bravo
+  [#3]   ---    CN  Charlie
+
+Message from #3: Charlie
+Hello sub-submaster
+
+Message to all from #3: Charlie
+From depth 3
+
+Conference "XYZ" has terminated.

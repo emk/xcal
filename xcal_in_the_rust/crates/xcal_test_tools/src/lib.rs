@@ -15,6 +15,10 @@ pub enum Action {
         conn: String,
         bytes: String,
     },
+    SendBytes {
+        conn: String,
+        hex: String,
+    },
     Expect {
         conn: String,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -77,6 +81,17 @@ mod tests {
         let action = Action::Send {
             conn: "master".into(),
             text: "hello".into(),
+        };
+        let json = serde_json::to_string(&action).unwrap();
+        let parsed: Action = serde_json::from_str(&json).unwrap();
+        assert_eq!(action, parsed);
+    }
+
+    #[test]
+    fn round_trip_send_bytes() {
+        let action = Action::SendBytes {
+            conn: "user1".into(),
+            hex: "ff f3".into(),
         };
         let json = serde_json::to_string(&action).unwrap();
         let parsed: Action = serde_json::from_str(&json).unwrap();

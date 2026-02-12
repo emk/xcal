@@ -1,0 +1,7 @@
+[[rules]]
+pattern = '\d{1,2}:\d{2}:\d{2} [ap]\.m\.'
+replace = "HH:MM:SS xm"
+
+[[rules]]
+pattern = '(?m)^\d{2}:\d{2}'
+replace = "HH:MM"

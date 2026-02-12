@@ -1,0 +1,65 @@
+{"comment": "Subconference disconnect — kill subordinate (partial), submaster bye (full auto-return)"}
+{"conn": "master", "action": "connect"}
+{"conn": "master", "action": "expect", "contains": "master terminal"}
+{"conn": "master", "action": "send", "text": "Explorer"}
+{"conn": "master", "action": "expect", "contains": "Enter command"}
+{"conn": "user1", "action": "connect"}
+{"conn": "user1", "action": "expect", "contains": "enter your name"}
+{"conn": "user1", "action": "send", "text": "Alpha"}
+{"conn": "user1", "action": "expect", "contains": "Enter command"}
+{"conn": "user2", "action": "connect"}
+{"conn": "user2", "action": "expect", "contains": "enter your name"}
+{"conn": "user2", "action": "send", "text": "Bravo"}
+{"conn": "user2", "action": "expect", "contains": "Enter command"}
+{"conn": "user3", "action": "connect"}
+{"conn": "user3", "action": "expect", "contains": "enter your name"}
+{"conn": "user3", "action": "send", "text": "Charlie"}
+{"conn": "user3", "action": "expect", "contains": "Enter command"}
+{"conn": "master", "action": "drain"}
+{"conn": "user1", "action": "drain"}
+{"conn": "user2", "action": "drain"}
+{"conn": "user3", "action": "drain"}
+{"comment": "--- Setup subconference: mt 1, gi 1;2,3 ---"}
+{"conn": "master", "action": "send", "text": "mt 1"}
+{"conn": "master", "action": "expect", "contains": "Done"}
+{"conn": "user1", "action": "expect", "contains": "You are now a master terminal"}
+{"conn": "user1", "action": "drain"}
+{"conn": "master", "action": "drain"}
+{"conn": "master", "action": "send", "text": "gi 1;2,3"}
+{"conn": "master", "action": "expect", "contains": "Done"}
+{"conn": "user1", "action": "expect", "contains": "You have been passed"}
+{"conn": "user1", "action": "drain"}
+{"conn": "user2", "action": "expect", "contains": "You are talking with #1: Alpha"}
+{"conn": "user2", "action": "drain"}
+{"conn": "user3", "action": "expect", "contains": "You are talking with #1: Alpha"}
+{"conn": "user3", "action": "drain"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- Submaster kills subordinate Charlie (partial — subcon survives) ---"}
+{"conn": "user1", "action": "send", "text": "ki 3"}
+{"conn": "user1", "action": "expect", "contains": "Done"}
+{"conn": "user3", "action": "drain", "quiet_ms": 100}
+{"conn": "user3", "action": "disconnect"}
+{"conn": "user1", "action": "drain"}
+{"conn": "user2", "action": "drain", "quiet_ms": 500}
+{"comment": "--- Verify: user1 WHO shows Bravo still in subcon, Charlie gone ---"}
+{"conn": "user1", "action": "send", "text": "who"}
+{"conn": "user1", "action": "expect", "contains": "Bravo"}
+{"conn": "user1", "action": "drain"}
+{"comment": "--- Submaster disconnects voluntarily — Bravo auto-returns to master ---"}
+{"conn": "user1", "action": "send", "text": "bye"}
+{"conn": "user1", "action": "drain", "quiet_ms": 100}
+{"conn": "user1", "action": "disconnect"}
+{"conn": "master", "action": "expect", "contains": "You have been passed"}
+{"conn": "master", "action": "drain"}
+{"conn": "user2", "action": "expect", "contains": "You are talking with #0: Explorer"}
+{"conn": "user2", "action": "drain"}
+{"comment": "--- Verify: master WHO shows Explorer + Bravo only ---"}
+{"conn": "master", "action": "send", "text": "who"}
+{"conn": "master", "action": "expect", "contains": "Bravo"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- Cleanup ---"}
+{"conn": "master", "action": "send", "text": "bye"}
+{"conn": "master", "action": "drain", "quiet_ms": 100}
+{"conn": "user2", "action": "drain", "quiet_ms": 100}
+{"conn": "master", "action": "disconnect"}
+{"conn": "user2", "action": "disconnect"}

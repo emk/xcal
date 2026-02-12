@@ -66,6 +66,9 @@ impl Runner {
             Action::SendRaw { conn, bytes } => {
                 self.handle_send_raw(conn, bytes, line_num).await
             }
+            Action::SendBytes { conn, hex } => {
+                self.handle_send_bytes(conn, hex, line_num).await
+            }
             Action::Expect {
                 conn,
                 contains,
@@ -136,6 +139,31 @@ impl Runner {
             miette!("line {line_num}: no connection named {name:?}")
         })?;
         conn.send(bytes.as_bytes()).await
+    }
+
+    #[instrument(level = "trace", skip_all, fields(conn = %name))]
+    async fn handle_send_bytes(
+        &mut self,
+        name: &str,
+        hex: &str,
+        line_num: usize,
+    ) -> Result<()> {
+        let bytes: Vec<u8> = hex
+            .split_whitespace()
+            .map(|pair| {
+                u8::from_str_radix(pair, 16).map_err(|e| {
+                    miette!("line {line_num}: invalid hex byte {pair:?}: {e}")
+                })
+            })
+            .collect::<Result<_>>()?;
+        debug!(
+            "[line {line_num}] send_bytes {name}: {hex:?} ({} bytes)",
+            bytes.len()
+        );
+        let conn = self.connections.get_mut(name).ok_or_else(|| {
+            miette!("line {line_num}: no connection named {name:?}")
+        })?;
+        conn.send(&bytes).await
     }
 
     #[instrument(level = "debug", skip_all, fields(conn = %name))]

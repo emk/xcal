@@ -4,9 +4,31 @@ Please enter your name. Explorer
 Enter command (type 'HELP' for instructions)
 Changes afoot!  Type EXPLAIN NEW for what's new!
 You are talking with #0: Explorer
+
+New user at #1: Alpha
+
+New user at #2: Bravo
+
+New user at #3: Charlie
+mt 1
+
+Done
+gi 1;2,3
+
+Done
 who
 
 =>[#0] M COM    CN  Explorer
+  [#1] M ---    CN  Alpha
+who 1
+
+  [#1] M ---    CN  Alpha
+who1
+
+  [#1] M ---    CN  Alpha
+who 2
+
+Invalid argument(s)
 bye
 
 Conference "XYZ" has terminated.

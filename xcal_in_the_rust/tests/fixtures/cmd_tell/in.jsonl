@@ -1,4 +1,4 @@
-{"comment": "Test tell command — direct message, tell-all, and inline tell-all"}
+{"comment": "Test tell command — all variations: BUILD, inline, bare number, multi-recipient, %k abort"}
 {"conn": "master", "action": "connect"}
 {"conn": "master", "action": "expect", "contains": "master terminal"}
 {"conn": "master", "action": "send", "text": "Explorer"}
@@ -7,29 +7,95 @@
 {"conn": "user1", "action": "expect", "contains": "enter your name"}
 {"conn": "user1", "action": "send", "text": "Wanderer"}
 {"conn": "user1", "action": "expect", "contains": "Enter command"}
+{"conn": "user2", "action": "connect"}
+{"conn": "user2", "action": "expect", "contains": "enter your name"}
+{"conn": "user2", "action": "send", "text": "Traveler"}
+{"conn": "user2", "action": "expect", "contains": "Enter command"}
 {"conn": "master", "action": "drain"}
-{"comment": "Direct message from master to user1 using BUILD state"}
+{"conn": "user1", "action": "drain"}
+{"conn": "user2", "action": "drain"}
+{"comment": "--- 1. Direct tell with BUILD state (t N) ---"}
 {"conn": "master", "action": "send", "text": "t 1"}
 {"conn": "master", "action": "expect", "contains": "Speak"}
 {"conn": "master", "action": "send", "text": "Hello from master"}
 {"conn": "master", "action": "send", "text": ""}
 {"conn": "user1", "action": "expect", "contains": "Hello from master"}
 {"conn": "user1", "action": "drain"}
-{"comment": "Tell-all from user1 using BUILD state"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- 2. Bare number shortcut (just N, no tell prefix) ---"}
+{"conn": "master", "action": "send", "text": "1"}
+{"conn": "master", "action": "expect", "contains": "Speak"}
+{"conn": "master", "action": "send", "text": "Bare number works"}
+{"conn": "master", "action": "send", "text": ""}
+{"conn": "user1", "action": "expect", "contains": "Bare number works"}
+{"conn": "user1", "action": "drain"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- 3. Inline direct tell (t N;message) ---"}
+{"conn": "master", "action": "send", "text": "t 1;Inline direct"}
+{"conn": "user1", "action": "expect", "contains": "Inline direct"}
+{"conn": "user1", "action": "drain"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- 4. Inline bare number (N;message) ---"}
+{"conn": "master", "action": "send", "text": "1;Inline bare"}
+{"conn": "user1", "action": "expect", "contains": "Inline bare"}
+{"conn": "user1", "action": "drain"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- 5. Multi-recipient tell with BUILD state ---"}
+{"conn": "master", "action": "send", "text": "1,2"}
+{"conn": "master", "action": "expect", "contains": "Speak"}
+{"conn": "master", "action": "send", "text": "To both of you"}
+{"conn": "master", "action": "send", "text": ""}
+{"conn": "user1", "action": "expect", "contains": "To both of you"}
+{"conn": "user1", "action": "drain"}
+{"conn": "user2", "action": "expect", "contains": "To both of you"}
+{"conn": "user2", "action": "drain"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- 6. Multi-line BUILD message ---"}
+{"conn": "user1", "action": "send", "text": "t 0"}
+{"conn": "user1", "action": "expect", "contains": "Speak"}
+{"conn": "user1", "action": "send", "text": "Line one"}
+{"conn": "user1", "action": "send", "text": "Line two"}
+{"conn": "user1", "action": "send", "text": "Line three"}
+{"conn": "user1", "action": "send", "text": ""}
+{"conn": "master", "action": "expect", "contains": "Line three"}
+{"conn": "master", "action": "drain"}
+{"conn": "user1", "action": "drain"}
+{"comment": "--- 7. Tell-all with BUILD state (te) ---"}
 {"conn": "user1", "action": "send", "text": "te"}
 {"conn": "user1", "action": "expect", "contains": "Speak"}
 {"conn": "user1", "action": "send", "text": "Greetings everyone"}
 {"conn": "user1", "action": "send", "text": ""}
 {"conn": "master", "action": "expect", "contains": "Greetings everyone"}
 {"conn": "master", "action": "drain"}
+{"conn": "user2", "action": "expect", "contains": "Greetings everyone"}
+{"conn": "user2", "action": "drain"}
 {"conn": "user1", "action": "drain"}
-{"comment": "Inline tell-all from master"}
-{"conn": "master", "action": "send", "text": "te;Farewell all"}
-{"conn": "user1", "action": "expect", "contains": "Farewell all"}
+{"comment": "--- 8. Inline tell-all (te;message) ---"}
+{"conn": "master", "action": "send", "text": "te;Broadcast inline"}
+{"conn": "user1", "action": "expect", "contains": "Broadcast inline"}
+{"conn": "user1", "action": "drain"}
+{"conn": "user2", "action": "expect", "contains": "Broadcast inline"}
+{"conn": "user2", "action": "drain"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- 9. %k abort — message should NOT be sent ---"}
+{"conn": "master", "action": "send", "text": "t 1"}
+{"conn": "master", "action": "expect", "contains": "Speak"}
+{"conn": "master", "action": "send", "text": "You should not see this%k"}
+{"conn": "master", "action": "send", "text": ""}
+{"conn": "master", "action": "expect", "contains": "Message not sent"}
+{"conn": "master", "action": "drain"}
+{"comment": "Drain user1 — should NOT have received the aborted message"}
+{"conn": "user1", "action": "drain", "quiet_ms": 500}
+{"comment": "--- 10. Verify messaging still works after abort ---"}
+{"conn": "master", "action": "send", "text": "t 1;Still here"}
+{"conn": "user1", "action": "expect", "contains": "Still here"}
 {"conn": "user1", "action": "drain"}
 {"conn": "master", "action": "drain"}
+{"comment": "--- Cleanup ---"}
 {"conn": "master", "action": "send", "text": "bye"}
 {"conn": "master", "action": "drain", "quiet_ms": 100}
 {"conn": "user1", "action": "drain", "quiet_ms": 100}
+{"conn": "user2", "action": "drain", "quiet_ms": 100}
 {"conn": "master", "action": "disconnect"}
 {"conn": "user1", "action": "disconnect"}
+{"conn": "user2", "action": "disconnect"}

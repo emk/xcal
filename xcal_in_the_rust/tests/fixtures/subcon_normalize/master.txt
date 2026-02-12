@@ -1,0 +1,53 @@
+Hello.  You are the master terminal.
+Please enter your name. Explorer
+
+Enter command (type 'HELP' for instructions)
+Changes afoot!  Type EXPLAIN NEW for what's new!
+You are talking with #0: Explorer
+
+New user at #1: Alpha
+
+New user at #2: Bravo
+
+New user at #3: Charlie
+mt 1
+
+Done
+gi 1;2,3
+
+Done
+no 1
+
+Done
+
+You have been passed
+  [#2]   ---    CN  Bravo
+  [#3]   ---    CN  Charlie
+who
+
+=>[#0] M COM    CN  Explorer
+  [#1]   ---    CN  Alpha
+  [#2]   ---    CN  Bravo
+  [#3]   ---    CN  Charlie
+mt 1
+
+Done
+gi 1;2,3
+
+Done
+no
+
+Done
+
+You have been passed
+  [#2]   ---    CN  Bravo
+  [#3]   ---    CN  Charlie
+who
+
+=>[#0] M COM    CN  Explorer
+  [#1]   ---    CN  Alpha
+  [#2]   ---    CN  Bravo
+  [#3]   ---    CN  Charlie
+bye
+
+Conference "XYZ" has terminated.

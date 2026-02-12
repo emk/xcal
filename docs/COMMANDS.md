@@ -51,13 +51,13 @@ These are available to all users.
 | 📄 | `aa*ll` | `aa` | `cmd_aa` | Accept alls — resume receiving tell-all messages. |
 | 📄 | `ig*nore` | `ig` | `cmd_ig` | Ignore user(s). `ig` alone = ignore all. Takes user number list. |
 | 📄 | `ac*cept` | `ac` | `cmd_ac` | Accept user(s) — undo ignore. `ac` alone = accept all. |
-| | `an` | `an` | `cmd_an` | Accept notification (join/leave/rename/kill events). |
-| | `rn` | `rn` | `cmd_rn` | Reject notification. |
-| | `rp` | `rp` | `cmd_rp` | Reject ports — hide your location. Permanent and irreversible. |
-| | `rc` | `rc` | `cmd_rc` | Reject controls — filter control characters from messages. |
-| | `oc` | `oc` | `cmd_oc` | Okay controls — allow control characters again. |
-| | `rb` | `rb` | `cmd_rb` | Reject breaks — ignore break key. |
-| | `ab` | `ab` | `cmd_ab` | Accept breaks — break key disconnects again. |
+| 📄 | `an` | `an` | `cmd_an` | Accept notification (join/leave/rename/kill events). |
+| 📄 | `rn` | `rn` | `cmd_rn` | Reject notification. |
+| 📄 | `rp` | `rp` | `cmd_rp` | Reject ports — hide your location. Permanent and irreversible. |
+| 📄 | `rc` | `rc` | `cmd_rc` | Reject controls — filter control characters from messages. |
+| 📄 | `oc` | `oc` | `cmd_oc` | Okay controls — allow control characters again. |
+| 📄 | `rb` | `rb` | `cmd_rb` | Reject breaks — ignore break key. |
+| 📄 | `ab` | `ab` | `cmd_ab` | Accept breaks — break key disconnects again. |
 
 ### Session
 
@@ -84,13 +84,13 @@ Available to the conference master (#0) and submasters created via `mty`.
 | Status | Pattern | Min | Handler | Description |
 |--------|---------|-----|---------|-------------|
 | 📄 | `ki*ll` | `ki` | `cmd_kill` | Disconnect specified user(s). Takes user number list. |
-| | `mt*y` | `mt` | `cmd_mty` | Make user(s) into submasters. Takes user number list. |
-| | `no*r*m` | `no` | `cmd_norm` | Normalize — remove submaster status, return their users to main. |
-| | `gi*ve` | `gi` | `cmd_give` | Transfer users to a submaster. Format: `gi 4;2,5,7`. Also `gi 4;new`. |
-| | `en*able` | `en` | `cmd_en` | Enable tell-alls in your subconference. |
-| | `di*s*able` | `di` | `cmd_dis` | Disable tell-alls in your subconference. |
+| 📄 | `mt*y` | `mt` | `cmd_mty` | Make user(s) into submasters. Takes user number list. |
+| 📄 | `no*r*m` | `no` | `cmd_norm` | Normalize — remove submaster status, return their users to main. |
+| 📄 | `gi*ve` | `gi` | `cmd_give` | Transfer users to a submaster. Format: `gi 4;2,5,7`. Also `gi 4;new`. |
+| 📄 | `en*able` | `en` | `cmd_en` | Enable tell-alls in your subconference. |
+| 📄 | `di*s*able` | `di` | `cmd_dis` | Disable tell-alls in your subconference. |
 | 📄 | `wa*rn` | `wa` | `cmd_warn` | Set conference warning. `wa text` or `wa` alone prompts (WARN state). |
-| | `be*l*ow` | `be` | `cmd_below` | Show users in subconferences below you. |
+| 📄 | `be*l*ow` | `be` | `cmd_below` | Show users in subconferences below you. |
 
 
 ## Extended commands (Xcaliber II additions)
@@ -111,12 +111,12 @@ Privileged commands require `xyzzy name;password` first.
 
 These exist in cmdtab but map to `cmd_nimp` (prints "not implemented").
 
-| Pattern | Min | Original purpose |
-|---------|-----|-----------------|
-| `bo` | `bo` | Bounce — ban ports from rejoining. |
-| `nb*o` | `nb` | Unbounce ports. |
-| `lb*o` | `lb` | List bounced ports. |
-| `bu` | `bu` | Bounce user — ban by user number. |
+| Status | Pattern | Min | Original purpose |
+|--------|---------|-----|-----------------|
+| | `bo` | `bo` | Bounce — ban ports from rejoining. |
+| | `nb*o` | `nb` | Unbounce ports. |
+| | `lb*o` | `lb` | List bounced ports. |
+| | `bu` | `bu` | Bounce user — ban by user number. |
 
 
 ## User states

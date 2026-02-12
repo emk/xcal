@@ -1,0 +1,44 @@
+{"comment": "Test an/rn — accept/reject notification, N flag in WHO"}
+{"conn": "master", "action": "connect"}
+{"conn": "master", "action": "expect", "contains": "master terminal"}
+{"conn": "master", "action": "send", "text": "Explorer"}
+{"conn": "master", "action": "expect", "contains": "Enter command"}
+{"comment": "--- Master enables notification ---"}
+{"conn": "master", "action": "send", "text": "an"}
+{"conn": "master", "action": "expect", "contains": "Done"}
+{"conn": "master", "action": "drain"}
+{"comment": "WHO shows N flag on master"}
+{"conn": "master", "action": "send", "text": "who"}
+{"conn": "master", "action": "expect", "contains": "N"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- User1 joins — master should see join notification ---"}
+{"conn": "user1", "action": "connect"}
+{"conn": "user1", "action": "expect", "contains": "enter your name"}
+{"conn": "user1", "action": "send", "text": "Wanderer"}
+{"conn": "user1", "action": "expect", "contains": "Enter command"}
+{"conn": "master", "action": "expect", "contains": "Wanderer"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- User1 renames — master should see rename notification ---"}
+{"conn": "user1", "action": "send", "text": "id Renamed"}
+{"conn": "user1", "action": "drain"}
+{"conn": "master", "action": "expect", "contains": "Renamed"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- Master disables notification ---"}
+{"conn": "master", "action": "send", "text": "rn"}
+{"conn": "master", "action": "expect", "contains": "Done"}
+{"conn": "master", "action": "drain"}
+{"comment": "WHO — N flag gone"}
+{"conn": "master", "action": "send", "text": "who"}
+{"conn": "master", "action": "expect", "contains": "Renamed"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- User1 renames again — master should NOT see notification ---"}
+{"conn": "user1", "action": "send", "text": "id ThirdName"}
+{"conn": "user1", "action": "drain"}
+{"comment": "Drain master — should NOT contain ThirdName notification"}
+{"conn": "master", "action": "drain", "quiet_ms": 500}
+{"comment": "--- Cleanup ---"}
+{"conn": "master", "action": "send", "text": "bye"}
+{"conn": "master", "action": "drain", "quiet_ms": 100}
+{"conn": "user1", "action": "drain", "quiet_ms": 100}
+{"conn": "master", "action": "disconnect"}
+{"conn": "user1", "action": "disconnect"}

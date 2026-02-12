@@ -15,6 +15,8 @@ tested core. Get the TCP behavior right first.
 
 ### 1. In-process unit tests (primary)
 
+TODO: Update so `conf` methods match our actual JSONL actions.
+
 The conference logic should be a library — a pure state machine that takes
 "user N sent line X" and produces output for each connection. No sockets, no
 async runtime, no timeouts.
@@ -123,23 +125,22 @@ This can be edited into a test case.
 
 ### 2. Test runner mode
 
-Reads a JSONL script, executes it against a server, captures per-connection
-transcripts, and either saves them (for creating expected output) or compares
-them against saved expected output.
+Reads a JSONL script, executes it against a server, and captures per-connection
+transcripts. The `run` subcommand saves transcripts (defaulting to the script's
+parent directory); the `check` subcommand re-runs a script and diffs live
+output against previously-saved transcripts.
 
 ```
-$ xcal-test run --script tests/tell_basic.jsonl \
-                --host localhost --port 2456 \
-                --save-transcripts tests/tell_basic/
-
-$ xcal-test run --script tests/tell_basic.jsonl \
-                --host localhost --port 2456 \
-                --expect-transcripts tests/tell_basic/
+$ xcal-test run tests/tell_basic/in.jsonl          # save transcripts
+$ xcal-test check tests/tell_basic/in.jsonl        # diff against saved
 ```
 
 The first invocation runs against the C server and saves the transcripts as
-the expected baseline. The second runs against the new implementation and
-diffs.
+the expected baseline. The second runs against any implementation and diffs.
+
+Normalization rules (for timestamps, dates, etc.) are specified in a
+`normalize.toml` file in the transcript directory. See `AGENTS.md` for the
+TOML format.
 
 
 ## JSONL script format

@@ -1,0 +1,28 @@
+Hello.  Welcome to Xcaliber.
+Please enter your name--Bravo
+
+Enter command (type 'HELP' for instructions)
+Changes afoot!  Type EXPLAIN NEW for what's new!
+You are talking with #0: Explorer
+
+New user at #3: Charlie
+
+You are talking with #1: Alpha
+who
+
+  [#1] M ---    CN  Alpha
+  [#2]   COM    CN  Bravo
+  [#3]   ---    CN  Charlie
+te;Hello subcon
+
+Message sent
+t 0;Can you hear me
+
+Invalid argument(s)
+t 1;Hello submaster
+
+Message sent
+
+You are talking with #0: Explorer
+
+Conference "XYZ" has terminated.

@@ -1,0 +1,60 @@
+{"comment": "Give-new — gi N;new transfers new-connection routing, => arrow, new user landing"}
+{"conn": "master", "action": "connect"}
+{"conn": "master", "action": "expect", "contains": "master terminal"}
+{"conn": "master", "action": "send", "text": "Explorer"}
+{"conn": "master", "action": "expect", "contains": "Enter command"}
+{"conn": "user1", "action": "connect"}
+{"conn": "user1", "action": "expect", "contains": "enter your name"}
+{"conn": "user1", "action": "send", "text": "Alpha"}
+{"conn": "user1", "action": "expect", "contains": "Enter command"}
+{"conn": "master", "action": "drain"}
+{"conn": "user1", "action": "drain"}
+{"comment": "--- Promote user1 to submaster ---"}
+{"conn": "master", "action": "send", "text": "mt 1"}
+{"conn": "master", "action": "expect", "contains": "Done"}
+{"conn": "user1", "action": "expect", "contains": "You are now a master terminal"}
+{"conn": "user1", "action": "drain"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- Verify => arrow on master before transfer ---"}
+{"conn": "master", "action": "send", "text": "who"}
+{"conn": "master", "action": "expect", "contains": "=>"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- Transfer new-connection routing to user1 ---"}
+{"conn": "master", "action": "send", "text": "gi 1;new"}
+{"conn": "master", "action": "expect", "contains": "Done"}
+{"comment": "Single message contains both 'You have been passed' and 'New users'"}
+{"conn": "user1", "action": "expect", "contains": "New users"}
+{"conn": "user1", "action": "drain"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- Verify => arrow moved to user1 ---"}
+{"conn": "master", "action": "send", "text": "who"}
+{"conn": "master", "action": "expect", "contains": "Alpha"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- New user connects — should land in user1's subcon ---"}
+{"conn": "user2", "action": "connect"}
+{"conn": "user2", "action": "expect", "contains": "enter your name"}
+{"conn": "user2", "action": "send", "text": "Bravo"}
+{"conn": "user2", "action": "expect", "contains": "Enter command"}
+{"conn": "user1", "action": "drain"}
+{"conn": "user2", "action": "drain"}
+{"conn": "master", "action": "drain", "quiet_ms": 500}
+{"comment": "--- user2 WHO: sees Alpha (=>) + Bravo, NOT Explorer ---"}
+{"conn": "user2", "action": "send", "text": "who"}
+{"conn": "user2", "action": "expect", "contains": "Alpha"}
+{"conn": "user2", "action": "drain"}
+{"comment": "--- master WHO: sees Explorer + Alpha, NOT Bravo ---"}
+{"conn": "master", "action": "send", "text": "who"}
+{"conn": "master", "action": "expect", "contains": "Alpha"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- master everything: sees all 3 ---"}
+{"conn": "master", "action": "send", "text": "a"}
+{"conn": "master", "action": "expect", "contains": "Bravo"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- Cleanup ---"}
+{"conn": "master", "action": "send", "text": "bye"}
+{"conn": "master", "action": "drain", "quiet_ms": 100}
+{"conn": "user1", "action": "drain", "quiet_ms": 100}
+{"conn": "user2", "action": "drain", "quiet_ms": 100}
+{"conn": "master", "action": "disconnect"}
+{"conn": "user1", "action": "disconnect"}
+{"conn": "user2", "action": "disconnect"}

@@ -4,9 +4,23 @@ Please enter your name. Explorer
 Enter command (type 'HELP' for instructions)
 Changes afoot!  Type EXPLAIN NEW for what's new!
 You are talking with #0: Explorer
+an
+
+Done
 who
 
 =>[#0] M COM    CN  Explorer
+
+New user at #1: Wanderer
+
+New name for #1: Renamed
+rn
+
+Done
+who
+
+=>[#0] M COM    C   Explorer
+  [#1]   ---    CN  Renamed
 bye
 
 Conference "XYZ" has terminated.

@@ -1,0 +1,28 @@
+Hello.  Welcome to Xcaliber.
+Please enter your name--Bravo
+
+Enter command (type 'HELP' for instructions)
+Changes afoot!  Type EXPLAIN NEW for what's new!
+You are talking with #0: Explorer
+
+You are talking with #1: Alpha
+te;First msg
+
+Message sent
+te;Should fail
+
+Tell-all not enabled
+t 1;Direct msg
+
+Message sent
+te;Works again
+
+Message sent
+en
+
+Command error
+di
+
+Command error
+
+Conference "XYZ" has terminated.

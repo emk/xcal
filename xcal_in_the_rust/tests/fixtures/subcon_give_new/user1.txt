@@ -1,12 +1,15 @@
-Hello.  You are the master terminal.
-Please enter your name. Explorer
+Hello.  Welcome to Xcaliber.
+Please enter your name--Alpha
 
 Enter command (type 'HELP' for instructions)
 Changes afoot!  Type EXPLAIN NEW for what's new!
 You are talking with #0: Explorer
-who
 
-=>[#0] M COM    CN  Explorer
-bye
+You are now a master terminal
+
+You have been passed
+  New users
+
+New user at #2: Bravo
 
 Conference "XYZ" has terminated.

@@ -1,0 +1,36 @@
+{"comment": "Test rp — reject ports, P flag in WHO, permanent"}
+{"conn": "master", "action": "connect"}
+{"conn": "master", "action": "expect", "contains": "master terminal"}
+{"conn": "master", "action": "send", "text": "Explorer"}
+{"conn": "master", "action": "expect", "contains": "Enter command"}
+{"conn": "user1", "action": "connect"}
+{"conn": "user1", "action": "expect", "contains": "enter your name"}
+{"conn": "user1", "action": "send", "text": "Wanderer"}
+{"conn": "user1", "action": "expect", "contains": "Enter command"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- Master runs port — sees port info for both users ---"}
+{"conn": "master", "action": "send", "text": "port"}
+{"conn": "master", "action": "expect", "contains": "Wanderer"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- User1 does rp — reject ports ---"}
+{"conn": "user1", "action": "send", "text": "rp"}
+{"conn": "user1", "action": "expect", "contains": "eject"}
+{"conn": "user1", "action": "drain"}
+{"comment": "Master WHO shows P flag on user1"}
+{"conn": "master", "action": "send", "text": "who"}
+{"conn": "master", "action": "expect", "contains": "P"}
+{"conn": "master", "action": "drain"}
+{"comment": "Master port — user1 shows rejecting ports"}
+{"conn": "master", "action": "send", "text": "port"}
+{"conn": "master", "action": "expect", "contains": "eject"}
+{"conn": "master", "action": "drain"}
+{"comment": "User1 runs port — gets rejection message"}
+{"conn": "user1", "action": "send", "text": "port"}
+{"conn": "user1", "action": "expect", "contains": "port"}
+{"conn": "user1", "action": "drain"}
+{"comment": "--- Cleanup ---"}
+{"conn": "master", "action": "send", "text": "bye"}
+{"conn": "master", "action": "drain", "quiet_ms": 100}
+{"conn": "user1", "action": "drain", "quiet_ms": 100}
+{"conn": "master", "action": "disconnect"}
+{"conn": "user1", "action": "disconnect"}

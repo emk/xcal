@@ -1,0 +1,67 @@
+{"comment": "Test: does 'who N' show submaster N's subconference, or just N's line?"}
+{"comment": "Setup: master + 3 users, promote user1, give user2+user3 to user1"}
+{"conn": "master", "action": "connect"}
+{"conn": "master", "action": "expect", "contains": "master terminal"}
+{"conn": "master", "action": "send", "text": "Explorer"}
+{"conn": "master", "action": "expect", "contains": "Enter command"}
+{"conn": "user1", "action": "connect"}
+{"conn": "user1", "action": "expect", "contains": "enter your name"}
+{"conn": "user1", "action": "send", "text": "Alpha"}
+{"conn": "user1", "action": "expect", "contains": "Enter command"}
+{"conn": "user2", "action": "connect"}
+{"conn": "user2", "action": "expect", "contains": "enter your name"}
+{"conn": "user2", "action": "send", "text": "Bravo"}
+{"conn": "user2", "action": "expect", "contains": "Enter command"}
+{"conn": "user3", "action": "connect"}
+{"conn": "user3", "action": "expect", "contains": "enter your name"}
+{"conn": "user3", "action": "send", "text": "Charlie"}
+{"conn": "user3", "action": "expect", "contains": "Enter command"}
+{"conn": "master", "action": "drain"}
+{"conn": "user1", "action": "drain"}
+{"conn": "user2", "action": "drain"}
+{"conn": "user3", "action": "drain"}
+{"comment": "--- Promote user1, give user2+user3 ---"}
+{"conn": "master", "action": "send", "text": "mt 1"}
+{"conn": "master", "action": "expect", "contains": "Done"}
+{"conn": "user1", "action": "expect", "contains": "master terminal"}
+{"conn": "user1", "action": "drain"}
+{"conn": "master", "action": "drain"}
+{"conn": "master", "action": "send", "text": "gi 1;2,3"}
+{"conn": "master", "action": "expect", "contains": "Done"}
+{"conn": "user1", "action": "expect", "contains": "passed"}
+{"conn": "user1", "action": "drain"}
+{"conn": "user2", "action": "expect", "contains": "talking with"}
+{"conn": "user2", "action": "drain"}
+{"conn": "user3", "action": "expect", "contains": "talking with"}
+{"conn": "user3", "action": "drain"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- Baseline: master plain 'who' sees only Explorer + Alpha ---"}
+{"conn": "master", "action": "send", "text": "who"}
+{"conn": "master", "action": "expect", "contains": "Alpha"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- Test 1: master 'who 1' — does it show Alpha's subcon or just Alpha's line? ---"}
+{"conn": "master", "action": "send", "text": "who 1"}
+{"conn": "master", "action": "expect", "contains": "Alpha"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- Test 2: master 'who1' (no space) — same test ---"}
+{"conn": "master", "action": "send", "text": "who1"}
+{"conn": "master", "action": "expect", "contains": "Alpha"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- Test 3: master 'who 2' — user2 is NOT in master's subcon, expect error ---"}
+{"conn": "master", "action": "send", "text": "who 2"}
+{"conn": "master", "action": "expect", "contains": "Invalid"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- Test 4: user1 (submaster) 'who 0' — can submaster view master's subcon? ---"}
+{"conn": "user1", "action": "send", "text": "who 0"}
+{"conn": "user1", "action": "expect", "contains": "Explorer"}
+{"conn": "user1", "action": "drain"}
+{"comment": "--- Cleanup ---"}
+{"conn": "master", "action": "send", "text": "bye"}
+{"conn": "master", "action": "drain", "quiet_ms": 100}
+{"conn": "user1", "action": "drain", "quiet_ms": 100}
+{"conn": "user2", "action": "drain", "quiet_ms": 100}
+{"conn": "user3", "action": "drain", "quiet_ms": 100}
+{"conn": "master", "action": "disconnect"}
+{"conn": "user1", "action": "disconnect"}
+{"conn": "user2", "action": "disconnect"}
+{"conn": "user3", "action": "disconnect"}

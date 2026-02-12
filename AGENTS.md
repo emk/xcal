@@ -4,7 +4,7 @@ Xcaliber Mark II is a multi-user conference (chat) server written in C over Chri
 
 ## Useful files
 
-- `README.md`: Overview and history.
+- `README.md`: Overview and history, all the way back to 1977.
 - `docs/`: Newly-generated documentation.
     - `ORIGINAL_CODE_OVERVIEW.md`: What this program is, history, etc.
     - `COMMANDS.md`: Short overview of available commands.
@@ -42,13 +42,60 @@ This will normally be done by the user, but the command is `xcal -l`. This will 
 
 ```sh
 cd xcal_in_the_rust
-cargo run -p xcal-test -- run \
-    --script tests/fixtures/hello/in.jsonl \
-    --host localhost --port 2456 \
-    --save-transcripts tests/fixtures/hello
+cargo run -p xcal-test -- run tests/fixtures/hello/in.jsonl
 ```
 
-Without `--save-transcripts`, transcripts print to stdout.
+This saves per-connection transcripts to the script's parent directory (i.e. `tests/fixtures/hello/master.txt`, etc.). To override the output directory:
+
+```sh
+cargo run -p xcal-test -- run tests/fixtures/hello/in.jsonl --transcript-dir /tmp/output
+```
+
+To print transcripts to stdout instead of saving:
+
+```sh
+cargo run -p xcal-test -- run tests/fixtures/hello/in.jsonl --stdout
+```
+
+### Checking transcripts
+
+Re-run a script and diff the live output against previously-saved transcripts:
+
+```sh
+cd xcal_in_the_rust
+cargo run -p xcal-test -- check tests/fixtures/hello/in.jsonl
+```
+
+This reads the expected `.txt` files from the script's parent directory, runs the script against the server, and shows a colored diff for any mismatches. Exit code is 0 if all transcripts match, 1 otherwise.
+
+### Normalization
+
+Some transcript content (timestamps, dates) varies between runs. Place a `normalize.toml` in the fixture directory to define regex replacement rules applied to both expected and actual transcripts before comparison:
+
+```toml
+[[rules]]
+pattern = '\d{1,2}:\d{2}:\d{2} [ap]\.m\.'
+replace = "HH:MM:SS xm"
+
+[[rules]]
+pattern = '\d{1,2}/\d{1,2}/\d{2,4}'
+replace = "M/D/YY"
+```
+
+The normalizer is loaded automatically by `check` from `normalize.toml` in the transcript directory. Use `--normalize-rules` to specify an alternate path.
+
+### Checking all fixtures
+
+Run all fixtures in a directory and report aggregate results:
+
+```sh
+cd xcal_in_the_rust
+cargo run -p xcal-test -- check-all tests/fixtures/
+```
+
+This discovers all subdirectories containing `in.jsonl`, runs each one sequentially, and prints a summary. Exit code is 0 if all pass, 1 if any fail.
+
+To skip a fixture, place a `SKIP.md` file in its directory. Skipped fixtures are reported but don't count as failures.
 
 ### JSONL script format
 
@@ -59,10 +106,21 @@ Each line is a JSON object. Lines with a `"comment"` key are skipped. All other 
 | `connect` | `conn` | Open a TCP connection to the server. |
 | `send` | `conn`, `text` | Send `text` + `\r\n` to the connection. |
 | `send_raw` | `conn`, `bytes` | Send raw bytes (no `\r\n` appended). |
+| `send_bytes` | `conn`, `hex` | Send hex-encoded bytes (e.g. `"ff f3"` for telnet IAC BRK). |
 | `expect` | `conn`, plus `contains` or `matches` | Read until buffer contains substring (or matches regex). Optional `timeout_ms` (default 5000). |
 | `drain` | `conn` | Read until quiet. Optional `quiet_ms` (default 100). |
 | `disconnect` | `conn` | Close the connection. |
 | `sleep` | `ms` | Sleep for `ms` milliseconds (no `conn` needed). |
+
+**Important: `expect` clears the receive buffer** after a successful
+match. If the server sends multiple messages to the same connection in
+a single TCP batch (e.g. "Done" followed by "You have been passed"),
+the first `expect` will consume and discard the entire buffer —
+including text that hasn't been matched yet. To handle this, expect
+the *last* distinctive string in the batch rather than chaining
+multiple expects on the same connection. When in doubt, use a single
+`expect` for the latest-arriving content and let earlier messages pass
+through implicitly.
 
 ### Example script
 
@@ -86,13 +144,13 @@ Scripts can manage multiple named connections to simulate multiple users. The fi
 ```jsonl
 {"conn": "master", "action": "connect"}
 {"conn": "master", "action": "expect", "contains": "master terminal"}
-{"conn": "master", "action": "send", "text": "MasterUser"}
+{"conn": "master", "action": "send", "text": "Explorer"}
 {"conn": "user1", "action": "connect"}
 {"conn": "user1", "action": "expect", "contains": "enter your name"}
-{"conn": "user1", "action": "send", "text": "RegularUser"}
+{"conn": "user1", "action": "send", "text": "Wanderer"}
 ```
 
-Each connection gets its own transcript file when using `--save-transcripts`.
+Each connection gets its own transcript file when saving transcripts.
 
 ### Telnet handling
 
@@ -103,6 +161,25 @@ Each connection gets its own transcript file when using `--save-transcripts`.
 Set `RUST_LOG` for debug output:
 
 ```sh
-RUST_LOG=xcal_test=debug cargo run -p xcal-test -- run --script ...
-RUST_LOG=xcal_test=trace cargo run -p xcal-test -- run --script ...  # full I/O
+RUST_LOG=xcal_test=debug cargo run -p xcal-test -- run ...
+RUST_LOG=xcal_test=trace cargo run -p xcal-test -- run ...  # full I/O
 ```
+
+## Claude Code sandbox
+
+Within the project root directory, you have broad privileges to work inside the sandbox without user confirmation. To prevent tasks being halted for user permission, you will often want to `cd` to the root of the project, and to prefer your built-in search and read tools. Trying to construct absolute paths or paths using `~/` may trigger unnecessary approval prompts.
+
+## A note about DCTS I/O
+
+Many DCTS terminal applications appear to have used line-oriented I/O modes, with single-line editing done on the terminal. This allowed entire lines to be sent as a single network message, making more efficient use of the mainframe CPU. This assumption seems to be largely present in Xcaliber Mark II.
+
+As part of this, when the user was actively editing text, then the `xcal` server would refrain from sending any messages. This doesn't happen _immediately_; it happens after "tell 1\r\n". So "tell 1; message\r\n" doesn't automatically pause output.
+
+Around 93-94, there was still a Mac extension "KSP" that implemented the "Kiewit Stream Protocol" over AppleTalk. Combined with a special Mac terminal emulator, this could be used to access the tiny handful of publicly remaining DCTS applications (mostly course registration). However, reconstructing the finer details of things like the Kiewit Stream Protocol (or any earlier DTSS stream protocols), is probably not for the faint of heart at this late date. The moral of the story: Do not assume Unix-era terminal assumptions apply to this project!
+
+Interesting historical context:
+
+- [DCTS era](https://www.cs.cornell.edu/wya/AcademicComputing/text/netcases.html)
+- [Dartmouth Mac era](https://www.cs.cornell.edu/wya/AcademicComputing/text/macdartmouth.html)
+- [Historical information on DTSS/DCTS](https://dtss.dartmouth.edu/) (There's an emulator, but it's for a much earlier version of DTSS.)
+- [An outside intruder dialing into Xcaliber in the 80s](https://dtss.dartmouth.edu/kiewit-dtss.php) (Preserved on the DTSS history site itself! An interesting historic crossover with BBS "files" culture.)

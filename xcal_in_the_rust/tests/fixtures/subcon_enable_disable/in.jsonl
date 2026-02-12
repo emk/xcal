@@ -1,0 +1,71 @@
+{"comment": "Enable/disable tell-alls — en, di commands, gating per subconference"}
+{"conn": "master", "action": "connect"}
+{"conn": "master", "action": "expect", "contains": "master terminal"}
+{"conn": "master", "action": "send", "text": "Explorer"}
+{"conn": "master", "action": "expect", "contains": "Enter command"}
+{"conn": "user1", "action": "connect"}
+{"conn": "user1", "action": "expect", "contains": "enter your name"}
+{"conn": "user1", "action": "send", "text": "Alpha"}
+{"conn": "user1", "action": "expect", "contains": "Enter command"}
+{"conn": "user2", "action": "connect"}
+{"conn": "user2", "action": "expect", "contains": "enter your name"}
+{"conn": "user2", "action": "send", "text": "Bravo"}
+{"conn": "user2", "action": "expect", "contains": "Enter command"}
+{"conn": "master", "action": "drain"}
+{"conn": "user1", "action": "drain"}
+{"conn": "user2", "action": "drain"}
+{"comment": "--- Setup subconference: mt 1, gi 1;2 ---"}
+{"conn": "master", "action": "send", "text": "mt 1"}
+{"conn": "master", "action": "expect", "contains": "Done"}
+{"conn": "user1", "action": "expect", "contains": "You are now a master terminal"}
+{"conn": "user1", "action": "drain"}
+{"conn": "master", "action": "drain"}
+{"conn": "master", "action": "send", "text": "gi 1;2"}
+{"conn": "master", "action": "expect", "contains": "Done"}
+{"conn": "user1", "action": "expect", "contains": "You have been passed"}
+{"conn": "user1", "action": "drain"}
+{"conn": "user2", "action": "expect", "contains": "You are talking with #1: Alpha"}
+{"conn": "user2", "action": "drain"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- Tell-all works by default ---"}
+{"conn": "user2", "action": "send", "text": "te;First msg"}
+{"conn": "user1", "action": "expect", "contains": "First msg"}
+{"conn": "user1", "action": "drain"}
+{"conn": "user2", "action": "drain"}
+{"comment": "--- Submaster disables tell-alls ---"}
+{"conn": "user1", "action": "send", "text": "di"}
+{"conn": "user1", "action": "expect", "contains": "Done"}
+{"conn": "user1", "action": "drain"}
+{"comment": "--- Tell-all now fails ---"}
+{"conn": "user2", "action": "send", "text": "te;Should fail"}
+{"conn": "user2", "action": "expect", "contains": "Tell-all not enabled"}
+{"conn": "user2", "action": "drain"}
+{"comment": "--- Targeted tell still works while tell-all disabled ---"}
+{"conn": "user2", "action": "send", "text": "t 1;Direct msg"}
+{"conn": "user1", "action": "expect", "contains": "Direct msg"}
+{"conn": "user1", "action": "drain"}
+{"conn": "user2", "action": "drain"}
+{"comment": "--- Submaster re-enables ---"}
+{"conn": "user1", "action": "send", "text": "en"}
+{"conn": "user1", "action": "expect", "contains": "Done"}
+{"conn": "user1", "action": "drain"}
+{"comment": "--- Tell-all works again ---"}
+{"conn": "user2", "action": "send", "text": "te;Works again"}
+{"conn": "user1", "action": "expect", "contains": "Works again"}
+{"conn": "user1", "action": "drain"}
+{"conn": "user2", "action": "drain"}
+{"comment": "--- Non-master can't run en/di ---"}
+{"conn": "user2", "action": "send", "text": "en"}
+{"conn": "user2", "action": "expect", "contains": "Command error"}
+{"conn": "user2", "action": "drain"}
+{"conn": "user2", "action": "send", "text": "di"}
+{"conn": "user2", "action": "expect", "contains": "Command error"}
+{"conn": "user2", "action": "drain"}
+{"comment": "--- Cleanup ---"}
+{"conn": "master", "action": "send", "text": "bye"}
+{"conn": "master", "action": "drain", "quiet_ms": 100}
+{"conn": "user1", "action": "drain", "quiet_ms": 100}
+{"conn": "user2", "action": "drain", "quiet_ms": 100}
+{"conn": "master", "action": "disconnect"}
+{"conn": "user1", "action": "disconnect"}
+{"conn": "user2", "action": "disconnect"}

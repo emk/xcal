@@ -5,8 +5,30 @@ Enter command (type 'HELP' for instructions)
 Changes afoot!  Type EXPLAIN NEW for what's new!
 You are talking with #0: Explorer
 
+New user at #2: Traveler
+
 Message from #0: Explorer
 Hello from master
+
+Message from #0: Explorer
+Bare number works
+
+Message from #0: Explorer
+Inline direct
+
+Message from #0: Explorer
+Inline bare
+
+Message from #0: Explorer
+To both of you
+t 0
+
+Speak!
+Line one
+Line two
+Line three
+
+Message sent
 te
 
 Speak!
@@ -15,6 +37,9 @@ Greetings everyone
 Message sent
 
 Message to all from #0: Explorer
-Farewell all
+Broadcast inline
+
+Message from #0: Explorer
+Still here
 
 Conference "XYZ" has terminated.

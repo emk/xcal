@@ -4,9 +4,16 @@ Please enter your name. Explorer
 Enter command (type 'HELP' for instructions)
 Changes afoot!  Type EXPLAIN NEW for what's new!
 You are talking with #0: Explorer
-who
 
-=>[#0] M COM    CN  Explorer
+New user at #1: Alpha
+
+New user at #2: Bravo
+mt 1
+
+Done
+gi 1;2
+
+Done
 bye
 
 Conference "XYZ" has terminated.

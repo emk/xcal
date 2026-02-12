@@ -4,9 +4,28 @@ Please enter your name. Explorer
 Enter command (type 'HELP' for instructions)
 Changes afoot!  Type EXPLAIN NEW for what's new!
 You are talking with #0: Explorer
+
+New user at #1: Alpha
+
+New user at #2: Bravo
+mt 1
+
+Done
+gi 1;2
+
+Done
+ki 1
+
+Done
+
+You have been passed
+  [#2]   ---    CN  Bravo
+
+User killed at #1: Alpha
 who
 
 =>[#0] M COM    CN  Explorer
+  [#2]   ---    CN  Bravo
 bye
 
 Conference "XYZ" has terminated.

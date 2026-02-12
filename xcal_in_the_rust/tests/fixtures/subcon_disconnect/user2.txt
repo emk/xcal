@@ -1,0 +1,18 @@
+Hello.  Welcome to Xcaliber.
+Please enter your name--Bravo
+
+Enter command (type 'HELP' for instructions)
+Changes afoot!  Type EXPLAIN NEW for what's new!
+You are talking with #0: Explorer
+
+New user at #3: Charlie
+
+You are talking with #1: Alpha
+
+User killed at #3: Charlie
+
+You are talking with #0: Explorer
+
+Ex-user at #1: Alpha
+
+Conference "XYZ" has terminated.

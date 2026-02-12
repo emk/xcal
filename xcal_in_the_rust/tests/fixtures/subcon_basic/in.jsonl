@@ -1,0 +1,103 @@
+{"comment": "Subconference basics — mt, gi, below, WHO scoping, tell scoping, everything, give-back"}
+{"conn": "master", "action": "connect"}
+{"conn": "master", "action": "expect", "contains": "master terminal"}
+{"conn": "master", "action": "send", "text": "Explorer"}
+{"conn": "master", "action": "expect", "contains": "Enter command"}
+{"conn": "user1", "action": "connect"}
+{"conn": "user1", "action": "expect", "contains": "enter your name"}
+{"conn": "user1", "action": "send", "text": "Alpha"}
+{"conn": "user1", "action": "expect", "contains": "Enter command"}
+{"conn": "user2", "action": "connect"}
+{"conn": "user2", "action": "expect", "contains": "enter your name"}
+{"conn": "user2", "action": "send", "text": "Bravo"}
+{"conn": "user2", "action": "expect", "contains": "Enter command"}
+{"conn": "user3", "action": "connect"}
+{"conn": "user3", "action": "expect", "contains": "enter your name"}
+{"conn": "user3", "action": "send", "text": "Charlie"}
+{"conn": "user3", "action": "expect", "contains": "Enter command"}
+{"conn": "master", "action": "drain"}
+{"conn": "user1", "action": "drain"}
+{"conn": "user2", "action": "drain"}
+{"conn": "user3", "action": "drain"}
+{"comment": "--- Master promotes user1 to submaster ---"}
+{"conn": "master", "action": "send", "text": "mt 1"}
+{"conn": "master", "action": "expect", "contains": "Done"}
+{"conn": "user1", "action": "expect", "contains": "You are now a master terminal"}
+{"conn": "user1", "action": "drain"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- Master gives user2+user3 to submaster ---"}
+{"conn": "master", "action": "send", "text": "gi 1;2,3"}
+{"conn": "master", "action": "expect", "contains": "Done"}
+{"conn": "user1", "action": "expect", "contains": "You have been passed"}
+{"conn": "user1", "action": "drain"}
+{"conn": "user2", "action": "expect", "contains": "You are talking with #1: Alpha"}
+{"conn": "user2", "action": "drain"}
+{"conn": "user3", "action": "expect", "contains": "You are talking with #1: Alpha"}
+{"conn": "user3", "action": "drain"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- WHO scoping: master sees only Explorer + Alpha ---"}
+{"conn": "master", "action": "send", "text": "who"}
+{"conn": "master", "action": "expect", "contains": "Alpha"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- WHO scoping: user1 (submaster) sees all 4 (dual role) ---"}
+{"conn": "user1", "action": "send", "text": "who"}
+{"conn": "user1", "action": "expect", "contains": "Charlie"}
+{"conn": "user1", "action": "drain"}
+{"comment": "--- WHO scoping: user2 sees Alpha + Bravo + Charlie, NOT Explorer ---"}
+{"conn": "user2", "action": "send", "text": "who"}
+{"conn": "user2", "action": "expect", "contains": "Alpha"}
+{"conn": "user2", "action": "drain"}
+{"comment": "--- Below: user1 sees subordinates ---"}
+{"conn": "user1", "action": "send", "text": "below"}
+{"conn": "user1", "action": "expect", "contains": "Charlie"}
+{"conn": "user1", "action": "drain"}
+{"comment": "--- Everything: master sees ALL 4 users ---"}
+{"conn": "master", "action": "send", "text": "a"}
+{"conn": "master", "action": "expect", "contains": "Charlie"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- Tell-all scoping: user2 tell-all reaches user1+user3, NOT master ---"}
+{"conn": "user2", "action": "send", "text": "te;Hello subcon"}
+{"conn": "user1", "action": "expect", "contains": "Hello subcon"}
+{"conn": "user1", "action": "drain"}
+{"conn": "user3", "action": "expect", "contains": "Hello subcon"}
+{"conn": "user3", "action": "drain"}
+{"conn": "user2", "action": "drain"}
+{"conn": "master", "action": "drain", "quiet_ms": 500}
+{"comment": "--- Tell-all scoping: master tell-all reaches user1, NOT user2/user3 ---"}
+{"conn": "master", "action": "send", "text": "te;Hello main"}
+{"conn": "user1", "action": "expect", "contains": "Hello main"}
+{"conn": "user1", "action": "drain"}
+{"conn": "master", "action": "drain"}
+{"conn": "user2", "action": "drain", "quiet_ms": 500}
+{"conn": "user3", "action": "drain", "quiet_ms": 500}
+{"comment": "--- Targeted tell scoping: user2 can't reach master ---"}
+{"conn": "user2", "action": "send", "text": "t 0;Can you hear me"}
+{"conn": "user2", "action": "expect", "contains": "Invalid argument"}
+{"conn": "user2", "action": "drain"}
+{"comment": "--- Targeted tell scoping: user2 CAN reach submaster ---"}
+{"conn": "user2", "action": "send", "text": "t 1;Hello submaster"}
+{"conn": "user1", "action": "expect", "contains": "Hello submaster"}
+{"conn": "user1", "action": "drain"}
+{"conn": "user2", "action": "drain"}
+{"comment": "--- Give-back: submaster returns user2 to master ---"}
+{"conn": "user1", "action": "send", "text": "gi 0;2"}
+{"conn": "user1", "action": "expect", "contains": "Done"}
+{"conn": "user2", "action": "expect", "contains": "You are talking with #0: Explorer"}
+{"conn": "user2", "action": "drain"}
+{"conn": "master", "action": "expect", "contains": "You have been passed"}
+{"conn": "master", "action": "drain"}
+{"conn": "user1", "action": "drain"}
+{"comment": "--- Verify: master WHO now sees Bravo again ---"}
+{"conn": "master", "action": "send", "text": "who"}
+{"conn": "master", "action": "expect", "contains": "Bravo"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- Cleanup ---"}
+{"conn": "master", "action": "send", "text": "bye"}
+{"conn": "master", "action": "drain", "quiet_ms": 100}
+{"conn": "user1", "action": "drain", "quiet_ms": 100}
+{"conn": "user2", "action": "drain", "quiet_ms": 100}
+{"conn": "user3", "action": "drain", "quiet_ms": 100}
+{"conn": "master", "action": "disconnect"}
+{"conn": "user1", "action": "disconnect"}
+{"conn": "user2", "action": "disconnect"}
+{"conn": "user3", "action": "disconnect"}

@@ -1,0 +1,15 @@
+Hello.  Welcome to Xcaliber.
+Please enter your name--Alpha
+
+Enter command (type 'HELP' for instructions)
+Changes afoot!  Type EXPLAIN NEW for what's new!
+You are talking with #0: Explorer
+
+New user at #2: Bravo
+
+You are now a master terminal
+
+You have been passed
+  [#2]   ---    CN  Bravo
+
+You are no longer connected to conference "XYZ"

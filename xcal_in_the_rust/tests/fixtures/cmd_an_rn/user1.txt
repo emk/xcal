@@ -1,12 +1,14 @@
-Hello.  You are the master terminal.
-Please enter your name. Explorer
+Hello.  Welcome to Xcaliber.
+Please enter your name--Wanderer
 
 Enter command (type 'HELP' for instructions)
 Changes afoot!  Type EXPLAIN NEW for what's new!
 You are talking with #0: Explorer
-who
+id Renamed
 
-=>[#0] M COM    CN  Explorer
-bye
+Done
+id ThirdName
+
+Done
 
 Conference "XYZ" has terminated.

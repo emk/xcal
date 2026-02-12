@@ -1,0 +1,39 @@
+{"comment": "Test rb/ab — reject/accept breaks via telnet IAC BRK"}
+{"conn": "master", "action": "connect"}
+{"conn": "master", "action": "expect", "contains": "master terminal"}
+{"conn": "master", "action": "send", "text": "Explorer"}
+{"conn": "master", "action": "expect", "contains": "Enter command"}
+{"conn": "user1", "action": "connect"}
+{"conn": "user1", "action": "expect", "contains": "enter your name"}
+{"conn": "user1", "action": "send", "text": "Wanderer"}
+{"conn": "user1", "action": "expect", "contains": "Enter command"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- User1 rejects breaks ---"}
+{"conn": "user1", "action": "send", "text": "rb"}
+{"conn": "user1", "action": "expect", "contains": "Done"}
+{"conn": "user1", "action": "drain"}
+{"comment": "--- Send telnet BRK to user1 — should be ignored (RB active) ---"}
+{"conn": "user1", "action": "send_bytes", "hex": "ff f3"}
+{"conn": "user1", "action": "drain", "quiet_ms": 500}
+{"comment": "User1 still connected — run who to prove it"}
+{"conn": "user1", "action": "send", "text": "who"}
+{"conn": "user1", "action": "expect", "contains": "Wanderer"}
+{"conn": "user1", "action": "drain"}
+{"comment": "--- User1 accepts breaks again ---"}
+{"conn": "user1", "action": "send", "text": "ab"}
+{"conn": "user1", "action": "expect", "contains": "Done"}
+{"conn": "user1", "action": "drain"}
+{"comment": "--- Send telnet BRK to user1 — should disconnect (AB active) ---"}
+{"conn": "user1", "action": "send_bytes", "hex": "ff f3"}
+{"conn": "user1", "action": "drain", "quiet_ms": 1000}
+{"comment": "Drain master to clear any notifications from the disconnect"}
+{"conn": "master", "action": "drain", "quiet_ms": 500}
+{"comment": "Master who — user1 should be gone"}
+{"conn": "master", "action": "send", "text": "who"}
+{"conn": "master", "action": "expect", "contains": "Explorer"}
+{"conn": "master", "action": "drain"}
+{"comment": "--- Cleanup ---"}
+{"conn": "user1", "action": "disconnect"}
+{"conn": "master", "action": "send", "text": "bye"}
+{"conn": "master", "action": "drain", "quiet_ms": 100}
+{"conn": "master", "action": "disconnect"}

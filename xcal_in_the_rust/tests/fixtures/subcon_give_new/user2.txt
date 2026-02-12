@@ -1,0 +1,12 @@
+Hello.  Welcome to Xcaliber.
+Please enter your name--Bravo
+
+Enter command (type 'HELP' for instructions)
+Changes afoot!  Type EXPLAIN NEW for what's new!
+You are talking with #1: Alpha
+who
+
+=>[#1] M ---    CN  Alpha
+  [#2]   COM    CN  Bravo
+
+Conference "XYZ" has terminated.
