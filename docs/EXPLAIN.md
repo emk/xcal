@@ -69,7 +69,7 @@ cmd_comp(user_input, pattern):
 Examples for `t*e*ll`:
 - `t` — matches (stops at first `*`, ok flag set)
 - `te` — matches (stops at second `*`)
-- `tel` — matches
+- `tel` — no match (ok cleared by first `l`, second `l` remains)
 - `tell` — matches (both strings exhausted)
 - `tells` — no match (user input longer than pattern)
 - `tx` — no match (`x` ≠ `e`)

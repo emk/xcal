@@ -1,7 +1,10 @@
 //! Xcaliber Mark II — Rust edition (stub).
 
+mod help;
+mod matching;
 mod messages;
 
+use help::HelpTopics;
 use messages::{keys, FluentArgs, Messages};
 
 fn main() {
@@ -17,4 +20,10 @@ fn main() {
     let tlkwith = m.format(keys::TLKWITH, Some(&args));
 
     print!("{mwelc}{intro}{tlkwith}");
+
+    // Show help system output.
+    let h = HelpTopics::new();
+    if let Some(text) = h.lookup("help") {
+        print!("{text}");
+    }
 }

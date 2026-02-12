@@ -4,10 +4,9 @@
 //! human-readable content only; wire framing (`\n` prefix/suffix, BEL bytes) is
 //! applied by this module. The transport layer converts `\n` to `\r\n`.
 
+pub use fluent_bundle::FluentArgs;
 use fluent_bundle::{FluentBundle, FluentResource};
 use unic_langid::LanguageIdentifier;
-
-pub use fluent_bundle::FluentArgs;
 
 /// All 64 message keys, matching the original C identifiers from `lang/*.lf`.
 #[allow(missing_docs)]
