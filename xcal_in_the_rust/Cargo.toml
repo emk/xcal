@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "crates/xcal_test_tools",
     "tools/xcal-test",
+    "tools/xcalr",
 ]
 
 [workspace.lints.rust]

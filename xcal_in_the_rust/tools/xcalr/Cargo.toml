@@ -1,0 +1,17 @@
+[package]
+name = "xcalr"
+version = "0.1.0"
+edition = "2021"
+license = "ISC OR MIT OR Apache-2.0"
+
+[[bin]]
+name = "xcalr"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+fluent-bundle = "0.15"
+intl-memoizer = "0.5"
+unic-langid = "0.9"
