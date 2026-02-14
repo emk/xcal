@@ -131,6 +131,15 @@ pub fn cmd_tell(
         }
     } else {
         // Direct tell.
+        // Subconference check: targets must be visible to sender.
+        for target_id in targets.iter() {
+            if !conf.is_in_subconference(target_id, who) {
+                let msg = conf.lang.invalid_arguments();
+                conf.append_output(who, &msg);
+                return CommandResult::Ok;
+            }
+        }
+
         // Pre-check: for direct messages, validate targets before composing
         // (C: checks ignoring and out before setting up message).
         for target_id in targets.iter() {

@@ -73,6 +73,9 @@ pub fn cmd_port(
 
     let mut output = String::from("\n");
     for uid in all_ids {
+        if !conf.is_in_subconference(uid, who) {
+            continue;
+        }
         conf.format_who_entry_ex(uid, who, WhoColumns::PortName, &mut output);
     }
 
@@ -127,7 +130,7 @@ pub fn cmd_below(
         .users
         .iter()
         .filter_map(|s| s.as_ref())
-        .filter(|u| u.master == who)
+        .filter(|u| u.master == who || u.id == who)
         .map(|u| u.id)
         .collect();
 

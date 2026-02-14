@@ -400,12 +400,23 @@ impl Conference {
 
         let idx = usize::from(id.0);
 
-        // Capture name for notification before removing the user.
+        // Capture info before removing the user.
         let name = self
             .users
             .get(idx)
             .and_then(|s| s.as_ref())
             .map_or_else(String::new, |u| u.name.clone());
+
+        // Auto-normalize: if this user is a submaster, reparent their
+        // subordinates back to their parent master before removing.
+        self.auto_normalize(id);
+
+        // Send exit notification BEFORE clearing user slot so
+        // send_notification can determine subconference membership.
+        if !name.is_empty() {
+            let notification = self.lang.user_exited(id, &name);
+            self.send_notification(&notification, id);
+        }
 
         // Record in left list.
         if !name.is_empty() {
@@ -426,12 +437,6 @@ impl Conference {
 
         self.current_count = self.current_count.saturating_sub(1);
         info!(%id, "user disconnected");
-
-        // Send exit notification.
-        if !name.is_empty() {
-            let notification = self.lang.user_exited(id, &name);
-            self.send_notification(&notification, id);
-        }
 
         self.current_count == 0 && self.peak_count > 0
     }
@@ -474,11 +479,23 @@ impl Conference {
 
     // ── Notification system ─────────────────────────────────────────
 
-    /// Send a notification to users who accept notifications.
+    /// Send a notification to users who accept notifications, scoped to
+    /// the excluded user's subconference.
     ///
     /// Skips users in Login state, users with reject_notifications set,
     /// and users who are Out (C: `con_notify`).
+    ///
+    /// The `exclude` user must still be present in the users array so
+    /// that subconference membership can be determined.
     pub(crate) fn send_notification(&mut self, text: &str, exclude: UserId) {
+        // Get subconference info for the excluded user.
+        let exclude_idx = usize::from(exclude.0);
+        let exclude_master = self
+            .users
+            .get(exclude_idx)
+            .and_then(|s| s.as_ref())
+            .map(|u| u.master);
+
         let mut recipients = UserSet::new();
         for slot in &self.users {
             let Some(user) = slot else { continue };
@@ -493,6 +510,16 @@ impl Conference {
             }
             if user.state == UserState::Out {
                 continue;
+            }
+            // Subconference scoping: only notify users visible from
+            // exclude's subconference.
+            if let Some(excl_master) = exclude_master {
+                if !(user.master == excl_master
+                    || user.master == exclude
+                    || user.id == excl_master)
+                {
+                    continue;
+                }
             }
             recipients.insert(user.id);
         }
@@ -699,7 +726,7 @@ impl Conference {
 
     /// Disconnect a user — record in left list, send notification.
     ///
-    /// Used by both voluntary disconnect and kill. The port shutdown
+    /// Used by voluntary disconnect (bye). The port shutdown
     /// is the caller's responsibility.
     pub(crate) fn disconnect_user(&mut self, id: UserId, was_killed: bool) {
         let idx = usize::from(id.0);
@@ -709,6 +736,19 @@ impl Conference {
         } else {
             return;
         };
+
+        // Auto-normalize: if this user is a submaster, reparent their
+        // subordinates back to their parent master before removing.
+        self.auto_normalize(id);
+
+        // Send notification BEFORE clearing user slot so
+        // send_notification can determine subconference membership.
+        let notification = if was_killed {
+            self.lang.user_killed(id, &name)
+        } else {
+            self.lang.user_exited(id, &name)
+        };
+        self.send_notification(&notification, id);
 
         // Record in left list.
         self.left.push(LeftUser {
@@ -730,14 +770,100 @@ impl Conference {
         }
 
         self.current_count = self.current_count.saturating_sub(1);
+    }
 
-        // Send notification.
-        let notification = if was_killed {
-            self.lang.user_killed(id, &name)
-        } else {
-            self.lang.user_exited(id, &name)
-        };
-        self.send_notification(&notification, id);
+    // ── Subconference lifecycle ───────────────────────────────────
+
+    /// Auto-normalize: if `id` is a submaster, reparent their
+    /// subordinates to `id`'s parent master, send "talking with" to
+    /// each subordinate, and send "passed" + listing to the parent.
+    ///
+    /// Called before removing a submaster (disconnect) so their
+    /// subordinates are returned to the parent. The user at `id` must
+    /// still be present in the users array.
+    pub(crate) fn auto_normalize(&mut self, id: UserId) {
+        if let Some((parent, subs)) = self.auto_normalize_reparent(id) {
+            self.send_passed_listing(parent, &subs);
+        }
+    }
+
+    /// Reparent subordinates of submaster `id` to their parent master
+    /// and send "talking with" to each. Returns `(parent_master,
+    /// subordinate_ids)` if `id` was a submaster, or `None` otherwise.
+    ///
+    /// Does NOT send "passed" + listing — caller decides when.
+    pub(crate) fn auto_normalize_reparent(
+        &mut self,
+        id: UserId,
+    ) -> Option<(UserId, Vec<UserId>)> {
+        let idx = usize::from(id.0);
+
+        let (is_submaster, parent_master) =
+            if let Some(Some(user)) = self.users.get(idx) {
+                (
+                    matches!(user.role, Role::Submaster { .. }),
+                    user.master,
+                )
+            } else {
+                return None;
+            };
+
+        if !is_submaster {
+            return None;
+        }
+
+        // Find subordinates (users whose master is `id`, excluding self).
+        let subordinates: Vec<UserId> = self
+            .users
+            .iter()
+            .filter_map(|s| s.as_ref())
+            .filter(|u| u.master == id && u.id != id)
+            .map(|u| u.id)
+            .collect();
+
+        // Reparent subordinates to the parent master.
+        for &sub_id in &subordinates {
+            let sub_idx = usize::from(sub_id.0);
+            if let Some(Some(user)) = self.users.get_mut(sub_idx) {
+                user.master = parent_master;
+            }
+        }
+
+        // Send "talking with" to each reparented subordinate.
+        let parent_name = self
+            .users
+            .get(usize::from(parent_master.0))
+            .and_then(|s| s.as_ref())
+            .map(|u| u.name.clone())
+            .unwrap_or_default();
+        for &sub_id in &subordinates {
+            let talking =
+                self.lang.talking_with(parent_master, &parent_name);
+            self.append_output(sub_id, "\n");
+            self.append_output(sub_id, &talking);
+            self.flush_output(sub_id);
+        }
+
+        Some((parent_master, subordinates))
+    }
+
+    /// Send "you have been passed" + WHO listing to `master_id`.
+    pub(crate) fn send_passed_listing(
+        &mut self,
+        master_id: UserId,
+        subordinates: &[UserId],
+    ) {
+        let passed = self.lang.you_are_passed();
+        self.append_output(master_id, &passed);
+
+        let mut listing = String::new();
+        for &sub_id in subordinates {
+            self.format_who_entry(sub_id, master_id, &mut listing);
+        }
+        if !listing.is_empty() {
+            self.append_output(master_id, &listing);
+        }
+        self.flush_output(master_id);
     }
 
     // ── Argument parsing ────────────────────────────────────────────
@@ -967,12 +1093,41 @@ impl Conference {
         }
     }
 
+    /// Check if `user_id` is visible from `viewer_id`'s subconference.
+    ///
+    /// Uses the C 3-way scoping rule:
+    /// - Same master (siblings + self)
+    /// - User's master is viewer (subordinates)
+    /// - User IS viewer's master
+    pub(crate) fn is_in_subconference(
+        &self,
+        user_id: UserId,
+        viewer_id: UserId,
+    ) -> bool {
+        let u_idx = usize::from(user_id.0);
+        let v_idx = usize::from(viewer_id.0);
+
+        let Some(Some(user)) = self.users.get(u_idx) else {
+            return false;
+        };
+        let Some(Some(viewer)) = self.users.get(v_idx) else {
+            return false;
+        };
+
+        user.master == viewer.master
+            || user.master == viewer_id
+            || user.id == viewer.master
+    }
+
     /// Format the WHO listing.
     pub(crate) fn format_who(&self, requester_id: UserId) -> String {
         let mut output = String::from("\n");
 
         for slot in &self.users {
             let Some(user) = slot else { continue };
+            if !self.is_in_subconference(user.id, requester_id) {
+                continue;
+            }
             self.format_who_entry(user.id, requester_id, &mut output);
         }
 

@@ -60,32 +60,11 @@ fixture_test!(cmd_time);
 fixture_test!(cmd_tty);
 fixture_test!(cmd_version);
 fixture_test!(cmd_warn);
-fixture_test!(
-    subcon_basic,
-    ignore = "subconference message routing not yet implemented"
-);
-fixture_test!(
-    subcon_disconnect,
-    ignore = "subconference master passing not yet implemented"
-);
-fixture_test!(
-    subcon_enable_disable,
-    ignore = "subconference enable/disable not yet implemented"
-);
-fixture_test!(
-    subcon_give_new,
-    ignore = "subconference scoping for who/notifications not yet implemented"
-);
-fixture_test!(
-    subcon_kill_submaster,
-    ignore = "subconference master passing not yet implemented"
-);
-fixture_test!(
-    subcon_nested,
-    ignore = "nested subconference scoping not yet implemented"
-);
-fixture_test!(
-    subcon_normalize,
-    ignore = "subconference normalize not yet implemented"
-);
+fixture_test!(subcon_basic);
+fixture_test!(subcon_disconnect);
+fixture_test!(subcon_enable_disable);
+fixture_test!(subcon_give_new);
+fixture_test!(subcon_kill_submaster);
+fixture_test!(subcon_nested);
+fixture_test!(subcon_normalize);
 fixture_test!(subcon_who);

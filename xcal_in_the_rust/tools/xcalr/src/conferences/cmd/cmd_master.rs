@@ -6,7 +6,7 @@ use std::time::{Instant, SystemTime};
 use super::{super::Conference, CommandResult};
 use crate::{
     conferences::LeftUser,
-    users::{Role, UserId},
+    users::{Role, UserId, UserState},
 };
 
 /// Check if the caller is master or submaster.
@@ -20,29 +20,30 @@ fn is_master_or_sub(conf: &Conference, who: UserId) -> bool {
         })
 }
 
-/// Check if `who` can manage `target` (master can manage anyone,
-/// submaster can manage users in their subconference).
+/// Check if `who` can manage `target` (master/submaster can manage
+/// users whose `master` field points to `who`).
 fn can_manage(conf: &Conference, who: UserId, target: UserId) -> bool {
     let who_idx = usize::from(who.0);
     let target_idx = usize::from(target.0);
 
-    let who_role = conf
+    let is_master_or_sub = conf
         .users
         .get(who_idx)
         .and_then(|s| s.as_ref())
-        .map(|u| u.role);
+        .is_some_and(|u| {
+            matches!(u.role, Role::Master { .. } | Role::Submaster { .. })
+        });
 
-    match who_role {
-        Some(Role::Master { .. }) => true,
-        Some(Role::Submaster { .. }) => {
-            // Submaster can only manage users whose master is `who`.
-            conf.users
-                .get(target_idx)
-                .and_then(|s| s.as_ref())
-                .is_some_and(|u| u.master == who)
-        }
-        _ => false,
+    if !is_master_or_sub {
+        return false;
     }
+
+    // Both master and submaster can only manage users whose master
+    // is `who` (C: `mstr == who`).
+    conf.users
+        .get(target_idx)
+        .and_then(|s| s.as_ref())
+        .is_some_and(|u| u.master == who)
 }
 
 pub fn cmd_kill(
@@ -65,6 +66,12 @@ pub fn cmd_kill(
         return CommandResult::Ok;
     }
 
+    // Collect info for post-loop notifications:
+    // (target_id, name, target's master for subcon scoping).
+    let mut killed: Vec<(UserId, String, UserId)> = Vec::new();
+    // Auto-normalize results: (parent_master, subordinate_ids).
+    let mut normalize_results: Vec<(UserId, Vec<UserId>)> = Vec::new();
+
     for target_id in targets.iter() {
         if target_id == who {
             continue; // Can't kill yourself.
@@ -74,12 +81,19 @@ pub fn cmd_kill(
             continue;
         }
 
-        // Get the user's info before removing them.
         let target_idx = usize::from(target_id.0);
-        let name = conf.users[target_idx]
+        let (name, target_master) = conf.users[target_idx]
             .as_ref()
-            .map(|u| u.name.clone())
-            .unwrap_or_default();
+            .map_or_else(
+                || (String::new(), UserId(0)),
+                |u| (u.name.clone(), u.master),
+            );
+
+        // Auto-normalize: reparent subordinates and send "talking with"
+        // before removing. "Passed" + listing is deferred until after Done.
+        if let Some(result) = conf.auto_normalize_reparent(target_id) {
+            normalize_results.push(result);
+        }
 
         // Send disconnect message to the killed user before shutdown.
         let disc_msg = conf.lang.disconnected();
@@ -113,41 +127,45 @@ pub fn cmd_kill(
             was_killed: true,
         });
 
-        // Send kill notification to other users (not the caller — they get "Done").
-        let kill_msg = conf.lang.user_killed(target_id, &name);
-        // Collect IDs to notify, then append output.
+        killed.push((target_id, name, target_master));
+    }
+
+    // Send "Done" to caller.
+    let done = conf.lang.done();
+    conf.append_output(who, &done);
+
+    // Send "passed" + listing for each auto-normalized submaster.
+    for (parent, subs) in &normalize_results {
+        conf.send_passed_listing(*parent, subs);
+    }
+
+    // Send kill notification scoped to the killed user's subconference.
+    for (target_id, name, target_master) in &killed {
+        let kill_msg = conf.lang.user_killed(*target_id, name);
+
         let notify_ids: Vec<UserId> = conf
             .users
             .iter()
             .filter_map(|slot| slot.as_ref())
-            .filter(|u| u.id != who && !u.prefs.reject_notifications)
+            .filter(|u| {
+                !u.prefs.reject_notifications
+                    && u.state != UserState::Login
+                    && u.state != UserState::Out
+                    // Subconference scoping using the killed user's
+                    // master (captured before removal).
+                    && (u.master == *target_master
+                        || u.master == *target_id
+                        || u.id == *target_master)
+            })
             .map(|u| u.id)
             .collect();
 
         for notify_id in notify_ids {
             conf.append_output(notify_id, &kill_msg);
-            conf.flush_output(notify_id);
+            if notify_id != who {
+                conf.flush_output(notify_id);
+            }
         }
-    }
-
-    let done = conf.lang.done();
-    conf.append_output(who, &done);
-
-    // Send kill notification to the caller too (after Done).
-    // Collect the messages first to avoid borrowing conf.left while calling append_output.
-    let kill_msgs: Vec<String> = targets
-        .iter()
-        .filter_map(|target_id| {
-            conf.left
-                .iter()
-                .rev()
-                .find(|l| l.id == target_id && l.was_killed)
-                .map(|l| conf.lang.user_killed(l.id, &l.name))
-        })
-        .collect();
-
-    for msg in &kill_msgs {
-        conf.append_output(who, msg);
     }
 
     CommandResult::Ok
@@ -184,7 +202,7 @@ pub fn cmd_make_tty(
     // Promote target to submaster.
     if let Some(Some(user)) = conf.users.get_mut(target_idx) {
         user.role = Role::Submaster {
-            tell_all_enabled: false,
+            tell_all_enabled: true,
         };
         user.master = who;
     }
@@ -249,6 +267,21 @@ pub fn cmd_normalize(
             }
         }
 
+        // Send "talking with" to each reparented subordinate.
+        let who_idx = usize::from(who.0);
+        let who_name = conf
+            .users
+            .get(who_idx)
+            .and_then(|s| s.as_ref())
+            .map(|u| u.name.clone())
+            .unwrap_or_default();
+        for sub_id in &subordinates {
+            let talking = conf.lang.talking_with(who, &who_name);
+            conf.append_output(*sub_id, "\n");
+            conf.append_output(*sub_id, &talking);
+            conf.flush_output(*sub_id);
+        }
+
         // Demote the target.
         if let Some(Some(user)) = conf.users.get_mut(target_idx) {
             user.role = Role::Normal;
@@ -269,7 +302,8 @@ pub fn cmd_normalize(
     let passed = conf.lang.you_are_passed();
     conf.append_output(who, &passed);
 
-    // Show the newly-acquired subordinates in a WHO-like listing.
+    // Show the newly-acquired subordinates in a WHO-like listing
+    // (excludes the demoted submasters themselves).
     let subordinate_ids: Vec<UserId> = conf
         .users
         .iter()
@@ -277,6 +311,7 @@ pub fn cmd_normalize(
         .filter(|u| {
             u.master == who
                 && u.id != who
+                && !targets.contains(&u.id)
                 && !matches!(
                     u.role,
                     Role::Submaster { .. } | Role::Master { .. }
@@ -403,6 +438,7 @@ pub fn cmd_give(
                 .map(|u| u.name.clone())
                 .unwrap_or_default();
             let talking = conf.lang.talking_with(target_id, &target_name);
+            conf.append_output(move_id, "\n");
             conf.append_output(move_id, &talking);
             conf.flush_output(move_id);
         }
@@ -438,7 +474,7 @@ pub fn cmd_enable(
     };
 
     if is_normal {
-        let msg = conf.lang.invalid_arguments();
+        let msg = conf.lang.command_error();
         conf.append_output(who, &msg);
     } else {
         let done = conf.lang.done();
@@ -472,7 +508,7 @@ pub fn cmd_disable(
     };
 
     if is_normal {
-        let msg = conf.lang.invalid_arguments();
+        let msg = conf.lang.command_error();
         conf.append_output(who, &msg);
     } else {
         let done = conf.lang.done();
