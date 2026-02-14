@@ -173,6 +173,17 @@ Within the project root directory, you have broad privileges to work inside the 
 - BAD: `~/w/src/xcal/foo`
 - GOOD: cd to project root, use `foo`
 
+## Rust lint policy
+
+The workspace sets several clippy lints to `deny` in `xcal_in_the_rust/Cargo.toml`. These are `deny` rather than `forbid` only because `forbid` breaks derive macros. **Treat them as `forbid` in our code:**
+
+- **`arithmetic_side_effects`**: Never `#[allow]` this. Use `checked_*`, `saturating_*`, or `wrapping_*` methods instead.
+- **`cast_possible_truncation`**, **`cast_possible_wrap`**, **`cast_sign_loss`**: Never `#[allow]` these. Never use `as` for integer conversions. Use `From`/`Into` for infallible widening, `TryFrom` with `?` or `.map_err()` for fallible conversions. Use `.expect()` only when the value is provably in range at compile time (e.g. a constant-length table index).
+
+If clippy flags a violation, fix the underlying code. Do not suppress it with `#[allow(...)]`.
+
+Use `expect` and `unwrap` only as "true assertions", for things that theoretically "can't happen." Normal errors get reported using `miette`, which is easy.
+
 ## A note about DCTS I/O
 
 Many DCTS terminal applications appear to have used line-oriented I/O modes, with single-line editing done on the terminal. This allowed entire lines to be sent as a single network message, making more efficient use of the mainframe CPU. This assumption seems to be largely present in Xcaliber Mark II.

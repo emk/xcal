@@ -14,10 +14,13 @@ workspace = true
 [dependencies]
 async-trait = { workspace = true }
 bytes = { workspace = true }
+clap = { workspace = true }
 dcts = { path = "../../crates/dcts" }
 fluent-bundle = "0.15"
 intl-memoizer = "0.5"
 miette = { workspace = true }
-tokio = { workspace = true, features = ["net", "sync"] }
+tokio = { workspace = true, features = ["macros", "net", "rt-multi-thread", "sync"] }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
 unic-langid = "0.9"
 uuid = { workspace = true }

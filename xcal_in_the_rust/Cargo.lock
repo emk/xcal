@@ -1155,11 +1155,14 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "bytes",
+ "clap",
  "dcts",
  "fluent-bundle",
  "intl-memoizer",
  "miette",
  "tokio",
+ "tracing",
+ "tracing-subscriber",
  "unic-langid",
  "uuid",
 ]

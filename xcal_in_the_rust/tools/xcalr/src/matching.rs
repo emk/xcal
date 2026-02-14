@@ -28,34 +28,35 @@ impl CommandPattern {
     }
 
     /// Test whether `input` matches this pattern.
-    #[allow(clippy::arithmetic_side_effects)]
     pub fn matches(&self, input: &str) -> bool {
-        let input = input.as_bytes();
-        let pattern = self.pattern.as_bytes();
-        let mut sx = 0;
-        let mut cx = 0;
+        let mut inp = input.as_bytes();
+        let mut pat = self.pattern.as_bytes();
         let mut ok = false;
 
-        while sx < input.len() && cx < pattern.len() {
-            if input[sx].eq_ignore_ascii_case(&pattern[cx]) {
-                sx += 1;
-                cx += 1;
-                ok = false;
-            } else if pattern[cx] == b'*' {
-                ok = true;
-                cx += 1;
-            } else {
-                return false;
+        loop {
+            match (inp.split_first(), pat.split_first()) {
+                (Some((&s, rest_s)), Some((&c, rest_c))) => {
+                    if s.eq_ignore_ascii_case(&c) {
+                        inp = rest_s;
+                        pat = rest_c;
+                        ok = false;
+                    } else if c == b'*' {
+                        ok = true;
+                        pat = rest_c;
+                    } else {
+                        return false;
+                    }
+                }
+                // Input exhausted. Match if pattern is also exhausted,
+                // or we stopped at an abbreviation point (ok flag set,
+                // or next pattern char is '*').
+                (None, None) => return true,
+                (None, Some((&b'*', _))) => return true,
+                (None, Some(_)) => return ok,
+                // Input remains but pattern exhausted.
+                (Some(_), None) => return false,
             }
         }
-
-        // Input exhausted. Match if pattern is also exhausted, or if
-        // we stopped at an abbreviation point (ok flag set, or next
-        // pattern char is '*').
-        sx == input.len()
-            && (cx == pattern.len()
-                || ok
-                || (cx < pattern.len() && pattern[cx] == b'*'))
     }
 }
 

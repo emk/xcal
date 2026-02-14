@@ -10,9 +10,12 @@ members = [
 [workspace.dependencies]
 async-trait = "0.1"
 bytes = "1"
+clap = { version = "4", features = ["derive"] }
 miette = "7"
 serde = { version = "1", features = ["derive"] }
 tokio = { version = "1" }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 uuid = { version = "1", features = ["v4"] }
 
 [workspace.lints.rust]
@@ -44,7 +47,9 @@ cast_possible_truncation = "deny"
 cast_possible_wrap = "deny"
 cast_sign_loss = "deny"
 
-# No `transmute` calls at all, but these we can forbid automatically.
+# No `transmute` calls at all. These are `deny` rather than `forbid` only
+# because clap's derive macros `#[allow]` parent lint groups. The real guard
+# is `unsafe_code = "forbid"` above — transmute requires unsafe.
 transmute_ptr_to_ref = "deny"
 transmutes_expressible_as_ptr_casts = "deny"
 wrong_transmute = "deny"

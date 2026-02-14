@@ -195,10 +195,13 @@ fn clock_args<'a>(time: &ClockTime<'a>) -> FluentArgs<'a> {
     args.set("hours", time.hours);
     args.set("minutes", time.minutes);
     args.set("seconds", time.seconds);
-    args.set("ampm", match time.ampm {
-        AmPm::Am => "am",
-        AmPm::Pm => "pm",
-    });
+    args.set(
+        "ampm",
+        match time.ampm {
+            AmPm::Am => "am",
+            AmPm::Pm => "pm",
+        },
+    );
     args
 }
 
@@ -273,11 +276,7 @@ impl Messages {
     }
 
     /// Format a message without wire framing.
-    fn format_raw(
-        &self,
-        key: &str,
-        args: Option<&FluentArgs<'_>>,
-    ) -> String {
+    fn format_raw(&self, key: &str, args: Option<&FluentArgs<'_>>) -> String {
         let msg = self
             .bundle
             .get_message(key)
@@ -373,10 +372,13 @@ impl Messages {
     pub fn time_warning(&self, count: i64, unit: TimeUnit) -> String {
         let mut args = FluentArgs::new();
         args.set("count", count);
-        args.set("unit", match unit {
-            TimeUnit::Second => "second",
-            TimeUnit::Minute => "minute",
-        });
+        args.set(
+            "unit",
+            match unit {
+                TimeUnit::Second => "second",
+                TimeUnit::Minute => "minute",
+            },
+        );
         self.format(keys::TIMEWRN, Some(&args))
     }
 
@@ -529,10 +531,7 @@ mod tests {
     fn trailing() {
         let m = msgs();
         assert_eq!(m.message_sent(), "Message sent\n");
-        assert_eq!(
-            m.conference_full(),
-            "Xcaliber is full--try again later\n"
-        );
+        assert_eq!(m.conference_full(), "Xcaliber is full--try again later\n");
     }
 
     #[test]
@@ -646,10 +645,7 @@ mod tests {
     #[test]
     fn leftmsg_preformatted() {
         let m = msgs();
-        assert_eq!(
-            m.left_count(3),
-            "003 Users have left Xcaliber\n"
-        );
+        assert_eq!(m.left_count(3), "003 Users have left Xcaliber\n");
     }
 
     #[test]

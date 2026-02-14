@@ -45,8 +45,13 @@ impl UserSet {
             return Self(u64::MAX);
         }
         // count is in 1..63 here (0 and >=64 handled above).
-        #[allow(clippy::arithmetic_side_effects)]
-        Self((1u64 << count) - 1)
+        #[allow(clippy::expect_used)]
+        Self(
+            1u64.checked_shl(u32::from(count))
+                .expect("count is 1..63")
+                .checked_sub(1)
+                .expect("shifted >= 2"),
+        )
     }
 
     /// Whether the set contains the given user.
@@ -90,9 +95,10 @@ impl Iterator for UserSetIter {
         if self.0 == 0 {
             return None;
         }
-        // Safe: trailing_zeros of a non-zero u64 is 0..63, fits in u8.
-        #[allow(clippy::cast_possible_truncation)]
-        let bit = self.0.trailing_zeros() as u8;
+        // trailing_zeros of a non-zero u64 is 0..63, fits in u8.
+        #[allow(clippy::expect_used)]
+        let bit = u8::try_from(self.0.trailing_zeros())
+            .expect("trailing_zeros of non-zero u64 is 0..63");
         self.0 &= self.0.wrapping_sub(1); // clear lowest set bit
         Some(UserId(bit))
     }
@@ -163,6 +169,27 @@ pub struct UserPrefs {
     pub reject_controls: bool,
     /// User has administrative privileges (`xyzzy`).
     pub privileged: bool,
+}
+
+impl User {
+    /// Create a new user in the Login state with default preferences.
+    pub fn new(id: UserId, port: Box<dyn Port>, role: Role) -> Self {
+        Self {
+            id,
+            name: String::new(),
+            state: UserState::Login,
+            role,
+            prefs: UserPrefs::default(),
+            port,
+            input: BytesMut::new(),
+            output: BytesMut::new(),
+            composing: None,
+            queue: VecDeque::new(),
+            master: UserId(0),
+            ignoring: UserSet::new(),
+            connected_at: Instant::now(),
+        }
+    }
 }
 
 /// A live user connected to the conference.

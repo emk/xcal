@@ -29,9 +29,15 @@ const FANTASY_NAMES: &[&str] = &[
 pub fn fantasy_name(addr: IpAddr) -> &'static str {
     let mut hasher = DefaultHasher::new();
     addr.hash(&mut hasher);
-    // Truncation on 32-bit is fine — we just need a table index.
-    #[allow(clippy::cast_possible_truncation, clippy::arithmetic_side_effects)]
-    let idx = (hasher.finish() as usize) % FANTASY_NAMES.len();
+    let table_len =
+        u64::try_from(FANTASY_NAMES.len()).expect("table len fits u64");
+    let idx = usize::try_from(
+        hasher
+            .finish()
+            .checked_rem(table_len)
+            .expect("non-zero table"),
+    )
+    .expect("index < table len, fits usize");
     FANTASY_NAMES[idx]
 }
 
