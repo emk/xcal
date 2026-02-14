@@ -6,13 +6,10 @@
 
 #![allow(dead_code)]
 
-use std::collections::VecDeque;
-use std::net::SocketAddr;
-use std::sync::Arc;
-use std::time::Instant;
+use std::{collections::VecDeque, sync::Arc, time::Instant};
 
 use bytes::BytesMut;
-use tokio::net::TcpStream;
+use dcts::ports::Port;
 
 use crate::messages::Message;
 
@@ -174,10 +171,8 @@ pub struct User {
     pub role: Role,
     /// Per-user preference flags.
     pub prefs: UserPrefs,
-    /// TCP connection to the user.
-    pub socket: TcpStream,
-    /// Remote address of the connection.
-    pub remote_addr: SocketAddr,
+    /// Transport-specific connection interface and identity.
+    pub port: Box<dyn Port>,
     /// Bytes received from the user, not yet processed.
     pub input: BytesMut,
     /// Bytes waiting to be sent to the user.

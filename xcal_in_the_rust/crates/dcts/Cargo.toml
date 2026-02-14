@@ -1,0 +1,16 @@
+[package]
+name = "dcts"
+version = "0.1.0"
+edition = "2021"
+license = "ISC OR MIT OR Apache-2.0"
+
+[lints]
+workspace = true
+
+[dependencies]
+async-trait = { workspace = true }
+bytes = { workspace = true }
+miette = { workspace = true }
+tokio = { workspace = true, features = ["net", "io-util", "rt", "sync"] }
+tracing = "0.1"
+uuid = { workspace = true }

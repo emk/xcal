@@ -5,13 +5,16 @@
 
 #![allow(dead_code)]
 
-use std::sync::Arc;
-use std::time::Instant;
+use std::{collections::HashMap, sync::Arc, time::Instant};
 
-use tokio::net::TcpListener;
+use async_trait::async_trait;
+use dcts::ports::{PortId, PortMessage, PortMessageSink};
+use tokio::sync::mpsc;
 
-use crate::messages::Message;
-use crate::users::{User, UserId};
+use crate::{
+    messages::Message,
+    users::{User, UserId},
+};
 
 /// Record of a user who has left the conference (for the `left` command).
 #[derive(Debug, Clone)]
@@ -29,14 +32,25 @@ pub struct BounceEntry {
     pub hidden: bool,
 }
 
-/// The main conference — holds all live users, listener, and conference state.
+/// A message sent to the conference from the outside world.
+#[derive(Debug)]
+pub enum ConferenceMessage {
+    /// An event from the port/transport layer.
+    Port(PortMessage),
+}
+
+/// The main conference — holds all live users and conference state.
 pub struct Conference {
+    /// Map from [`PortId`] to [`UserId`].
+    pub port_to_user: HashMap<PortId, UserId>,
     /// User slots — `None` for empty slots, `Some` for connected users.
     pub users: Vec<Option<User>>,
     /// Users who have left (for the `left` command).
     pub left: Vec<LeftUser>,
-    /// Listener socket for incoming connections.
-    pub listener: TcpListener,
+    /// Receiver for external messages (new connections, user input, etc.).
+    pub receiver: mpsc::Receiver<ConferenceMessage>,
+    /// Sender for external messages (cloned and handed out as needed).
+    pub sender: mpsc::Sender<ConferenceMessage>,
     /// Current conference warning, if any.
     pub current_warning: Option<Arc<Message>>,
     /// When the conference was started.
@@ -53,4 +67,39 @@ pub struct Conference {
     pub current_count: usize,
     /// Peak number of simultaneous users.
     pub peak_count: usize,
+}
+
+impl Conference {
+    /// Construct a [`PortMessageSink`] for use by
+    /// [`dcts::ports::Port`] implementations. Wraps each
+    /// [`PortMessage`] in [`ConferenceMessage::Port`] before sending.
+    fn port_message_sink(&self) -> Box<dyn PortMessageSink> {
+        Box::new(ConferencePortMessageSink {
+            sender: self.sender.clone(),
+        })
+    }
+}
+
+/// Bridges the port layer to the conference by wrapping [`PortMessage`]s
+/// in [`ConferenceMessage::Port`] before sending.
+struct ConferencePortMessageSink {
+    sender: mpsc::Sender<ConferenceMessage>,
+}
+
+#[async_trait]
+impl PortMessageSink for ConferencePortMessageSink {
+    async fn send(&self, msg: PortMessage) -> Result<(), PortMessage> {
+        self.sender
+            .send(ConferenceMessage::Port(msg))
+            .await
+            .map_err(|e| match e.0 {
+                ConferenceMessage::Port(m) => m,
+            })
+    }
+
+    fn clone_sink(&self) -> Box<dyn PortMessageSink> {
+        Box::new(ConferencePortMessageSink {
+            sender: self.sender.clone(),
+        })
+    }
 }

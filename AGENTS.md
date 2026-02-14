@@ -4,9 +4,10 @@ Xcaliber Mark II is a multi-user conference (chat) server written in C over Chri
 
 ## Useful files
 
-- `README.md`: Overview and history, all the way back to 1977.
+- `README.md`: Overview and history, all the way back to the original Xcaliber in 1977.
 - `docs/`: Newly-generated documentation.
-    - `ORIGINAL_CODE_OVERVIEW.md`: What this program is, history, etc.
+    - `DCTS_XCAL_BACKGROUND.md`: How the original XCaliber worked. Includes a timeline and relevant OS details about DCTS.
+    - `ORIGINAL_CODE_OVERVIEW.md`: What the XCaliber Mark II program is, history, etc.
     - `COMMANDS.md`: Short overview of available commands.
 - `plans/`: Implementation plans.
     - `RUST_EXPLORATION_TOOL.md`: Design docs for `xcal-test` protocol exploration tool. 

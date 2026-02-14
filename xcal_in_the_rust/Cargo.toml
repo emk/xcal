@@ -1,10 +1,19 @@
 [workspace]
 resolver = "2"
 members = [
+    "crates/dcts",
     "crates/xcal_test_tools",
     "tools/xcal-test",
     "tools/xcalr",
 ]
+
+[workspace.dependencies]
+async-trait = "0.1"
+bytes = "1"
+miette = "7"
+serde = { version = "1", features = ["derive"] }
+tokio = { version = "1" }
+uuid = { version = "1", features = ["v4"] }
 
 [workspace.lints.rust]
 # Document all public items.
