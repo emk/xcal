@@ -233,11 +233,11 @@ macro_rules! port_name_message {
 /// Loads a `.ftl` resource at construction time and validates that all
 /// expected message keys are present. Format methods apply wire framing
 /// (newline prefix/suffix, BEL bytes) around the Fluent text content.
-pub struct Messages {
+pub struct Lang {
     bundle: FluentBundle<FluentResource>,
 }
 
-impl Messages {
+impl Lang {
     /// Load the en-US message bundle and validate all keys.
     ///
     /// # Panics
@@ -265,7 +265,7 @@ impl Messages {
             assert!(bundle.has_message(key), "Missing message key: {key}");
         }
 
-        Messages { bundle }
+        Lang { bundle }
     }
 
     /// Format a message with wire framing applied.
@@ -462,8 +462,8 @@ impl Messages {
 mod tests {
     use super::*;
 
-    fn msgs() -> Messages {
-        Messages::new()
+    fn msgs() -> Lang {
+        Lang::new()
     }
 
     #[test]

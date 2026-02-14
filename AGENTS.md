@@ -9,6 +9,7 @@ Xcaliber Mark II is a multi-user conference (chat) server written in C over Chri
     - `DCTS_XCAL_BACKGROUND.md`: How the original XCaliber worked. Includes a timeline and relevant OS details about DCTS.
     - `ORIGINAL_CODE_OVERVIEW.md`: What the XCaliber Mark II program is, history, etc.
     - `COMMANDS.md`: Short overview of available commands.
+    - `TESTING_STRATEGY.md`: When working on tests, **read this** to understand the different kinds of tests we have, when to use which, and how to safely use and write tests as part of an agent team.
 - `plans/`: Implementation plans.
     - `RUST_EXPLORATION_TOOL.md`: Design docs for `xcal-test` protocol exploration tool. 
 - `help/*.hf`: Original help for all commands and topics.
@@ -25,8 +26,10 @@ Xcaliber Mark II is a multi-user conference (chat) server written in C over Chri
 - `xcal_in_the_rust/`: Rust workspace — tooling, maybe someday a port.
     - `crates/`: Rust library crates.
         - `xcal_test_tools/`: Data structures for JSONL protocol testing language, plus support code. Does not include networking support.
+        - `dcts/`: A very basic DCTS "OS" layer. Mostly just handles DCTS I/O "ports."
     - `tools/`: Rust binary crates.
         - `xcal-test/`: CLI tool that runs JSONL scripts against a live `xcal` server and captures transcripts.
+        - `xcalr/`: New Rust Xcaliber server!
     - `tests/fixtures/`: Sample input and output data for interacting with `xcal`. Captured from original `xcal` using `xcal-test`.
         - `{name}/in.jsonl`: Input JSONL test script (supports multiple named connections).
         - `{name}/{conn}.txt`: Per-connection output transcripts.
@@ -38,6 +41,8 @@ This will normally be done by the user, but the command is `xcal -l`. This will 
 ## Testing the protocol with `xcal-test`
 
 `xcal-test` runs JSONL scripts against a live `xcal` server, managing multiple named TCP connections and capturing per-connection transcripts. It defaults to port 2456 and `localhost`.
+
+Note that the C server is a **global** resource, and it will not give consistent results if multiple agents try to use it in parallel. Reserve this for the top-level interactive agent to establish ground truth.
 
 ### Running a script
 

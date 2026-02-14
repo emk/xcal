@@ -13,10 +13,14 @@ use miette::Report;
 use tracing::{debug, info, warn};
 
 use crate::{
-    lang::Messages,
+    lang::Lang,
     messages::Message,
     users::{Role, User, UserId, UserState},
 };
+
+mod cmd;
+#[cfg(test)]
+mod test_harness;
 
 /// Record of a user who has left the conference (for the `left` command).
 #[derive(Debug, Clone)]
@@ -43,6 +47,8 @@ pub enum ConferenceMessage {
 
 /// The main conference — holds all live users and conference state.
 pub struct Conference {
+    /// Localized message formatter.
+    pub(crate) lang: Lang,
     /// Map from [`PortId`] to [`UserId`].
     pub port_to_user: HashMap<PortId, UserId>,
     /// User slots — `None` for empty slots, `Some` for connected users.
@@ -72,6 +78,7 @@ impl Conference {
     pub fn new() -> Self {
         let now = Instant::now();
         Self {
+            lang: Lang::new(),
             port_to_user: HashMap::new(),
             users: Vec::new(),
             left: Vec::new(),
@@ -89,11 +96,7 @@ impl Conference {
     // ── Event handlers ──────────────────────────────────────────────
 
     /// Handle a new connection.
-    pub fn handle_new(
-        &mut self,
-        port: Box<dyn Port>,
-        messages: &Messages,
-    ) -> Result<(), Report> {
+    pub fn handle_new(&mut self, port: Box<dyn Port>) -> Result<(), Report> {
         let idx =
             self.users
                 .iter()
@@ -117,8 +120,8 @@ impl Conference {
         };
 
         let welcome = match role {
-            Role::Master { .. } => messages.master_welcome(),
-            _ => messages.welcome(),
+            Role::Master { .. } => self.lang.master_welcome(),
+            _ => self.lang.welcome(),
         };
 
         let mut user = User::new(id, port, role);
@@ -141,7 +144,6 @@ impl Conference {
         &mut self,
         port_id: PortId,
         input: &BytesMut,
-        messages: &Messages,
     ) -> Result<(), Report> {
         let Some(&id) = self.port_to_user.get(&port_id) else {
             warn!(?port_id, "input from unknown port");
@@ -157,8 +159,8 @@ impl Conference {
         match state {
             UserState::Login => {
                 let name = String::from_utf8_lossy(input).to_string();
-                let intro = messages.intro();
-                let talking = messages.talking_with(id, &name);
+                let intro = self.lang.intro();
+                let talking = self.lang.talking_with(id, &name);
 
                 if let Some(Some(user)) = self.users.get_mut(idx) {
                     user.name = name;
@@ -171,38 +173,33 @@ impl Conference {
             }
             UserState::Idle => {
                 let line = String::from_utf8_lossy(input);
-                let cmd = line.trim().to_lowercase();
 
-                // Transition to Command for dispatch.
                 if let Some(Some(user)) = self.users.get_mut(idx) {
                     user.state = UserState::Command;
                 }
 
-                match cmd.as_str() {
-                    "who" => {
-                        let who = self.format_who(id);
-                        self.append_output(id, &who);
+                let result = match cmd::parse(&line) {
+                    Some((command, args)) => {
+                        cmd::dispatch(self, id, command, args)
                     }
-                    "bye" => {
-                        let conterm = messages.conference_terminated();
-                        self.append_output(id, &conterm);
-                        self.flush_output(id);
+                    None => {
+                        let err = self.lang.command_error();
+                        self.append_output(id, &err);
+                        cmd::CommandResult::Ok
+                    }
+                };
+
+                match result {
+                    cmd::CommandResult::Ok => {
                         if let Some(Some(user)) = self.users.get_mut(idx) {
-                            let _ = user.port.shutdown();
+                            user.state = UserState::Idle;
                         }
+                        self.flush_output(id);
+                    }
+                    cmd::CommandResult::EndConference => {
                         return Ok(());
                     }
-                    _ => {
-                        let err = messages.command_error();
-                        self.append_output(id, &err);
-                    }
                 }
-
-                // Back to Idle.
-                if let Some(Some(user)) = self.users.get_mut(idx) {
-                    user.state = UserState::Idle;
-                }
-                self.flush_output(id);
             }
             _ => {
                 debug!(%id, ?state, "ignoring input in unexpected state");
@@ -241,7 +238,7 @@ impl Conference {
     // ── Output helpers ──────────────────────────────────────────────
 
     /// Append text to a user's output buffer.
-    fn append_output(&mut self, id: UserId, text: &str) {
+    pub(crate) fn append_output(&mut self, id: UserId, text: &str) {
         let idx = usize::from(id.0);
         if let Some(Some(user)) = self.users.get_mut(idx) {
             user.output.extend_from_slice(text.as_bytes());
@@ -249,7 +246,7 @@ impl Conference {
     }
 
     /// Try to send the user's buffered output to the port.
-    fn flush_output(&mut self, id: UserId) {
+    pub(crate) fn flush_output(&mut self, id: UserId) {
         let idx = usize::from(id.0);
         if let Some(Some(user)) = self.users.get_mut(idx) {
             Self::flush_user_output(user);
@@ -269,7 +266,7 @@ impl Conference {
     // ── Command formatting ──────────────────────────────────────────
 
     /// Format the WHO listing.
-    fn format_who(&self, requester_id: UserId) -> String {
+    pub(crate) fn format_who(&self, requester_id: UserId) -> String {
         let mut output = String::from("\n");
 
         for slot in &self.users {

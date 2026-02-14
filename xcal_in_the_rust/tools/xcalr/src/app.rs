@@ -11,16 +11,12 @@ use miette::Report;
 use tokio::sync::mpsc;
 use tracing::{info, warn};
 
-use crate::{
-    conferences::{Conference, ConferenceMessage},
-    lang::Messages,
-};
+use crate::conferences::{Conference, ConferenceMessage};
 
 /// The top-level application — owns the channel and conference lifecycle.
 pub struct XcaliberApp {
     receiver: mpsc::Receiver<ConferenceMessage>,
     sender: mpsc::Sender<ConferenceMessage>,
-    messages: Messages,
     conference: Option<Conference>,
 }
 
@@ -31,7 +27,6 @@ impl XcaliberApp {
         Self {
             receiver,
             sender,
-            messages: Messages::new(),
             conference: None,
         }
     }
@@ -71,11 +66,11 @@ impl XcaliberApp {
                     info!("starting new conference");
                     Conference::new()
                 });
-                conf.handle_new(port, &self.messages)?;
+                conf.handle_new(port)?;
             }
             PortMessage::InputLine { port_id, input } => {
                 if let Some(conf) = self.conference.as_mut() {
-                    conf.handle_input(port_id, &input, &self.messages)?;
+                    conf.handle_input(port_id, &input)?;
                 } else {
                     warn!(?port_id, "input line with no active conference");
                 }

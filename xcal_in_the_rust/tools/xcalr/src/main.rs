@@ -10,12 +10,11 @@ mod users;
 
 use std::net::SocketAddr;
 
+use app::XcaliberApp;
 use clap::{Parser, Subcommand};
 use miette::Report;
 use tokio::net::TcpListener;
 use tracing::info;
-
-use app::XcaliberApp;
 
 #[derive(Parser)]
 #[command(name = "xcalr")]
@@ -39,7 +38,11 @@ async fn main() -> Result<(), Report> {
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("dcts=info,xcalr=info,warn")),
+                .unwrap_or_else(|_| {
+                    tracing_subscriber::EnvFilter::new(
+                        "dcts=info,xcalr=info,warn",
+                    )
+                }),
         )
         .init();
 

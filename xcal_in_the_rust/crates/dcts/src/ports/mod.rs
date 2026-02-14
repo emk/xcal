@@ -14,9 +14,15 @@ use uuid::Uuid;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PortId(Uuid);
 
+impl Default for PortId {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PortId {
     /// Create a new unique port ID.
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self(Uuid::new_v4())
     }
 }

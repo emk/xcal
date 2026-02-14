@@ -26,6 +26,7 @@ const FANTASY_NAMES: &[&str] = &[
 ///
 /// Hashes the full address (v4 or v6) for good distribution across the
 /// name table. The same address always produces the same name.
+#[allow(clippy::expect_used)]
 pub fn fantasy_name(addr: IpAddr) -> &'static str {
     let mut hasher = DefaultHasher::new();
     addr.hash(&mut hasher);
@@ -43,8 +44,9 @@ pub fn fantasy_name(addr: IpAddr) -> &'static str {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::net::{Ipv4Addr, Ipv6Addr};
+
+    use super::*;
 
     #[test]
     fn localhost_gets_a_name() {

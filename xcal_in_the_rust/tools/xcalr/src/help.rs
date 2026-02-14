@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::matching::CommandPattern;
 
 /// Embedded help file content, keyed by filename.

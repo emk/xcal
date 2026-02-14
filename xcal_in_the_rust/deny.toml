@@ -10,8 +10,6 @@ ignore = []
 allow = [
     "0BSD",
     "Apache-2.0",
-    "BSD-2-Clause",
-    "BSD-3-Clause",
     "ISC",
     "MIT",
     "Unicode-3.0",
@@ -30,4 +28,8 @@ deny = [
 ]
 
 # Ignore duplicate versions of these crates (pulled in by different dependencies).
-skip = []
+skip = [
+    { crate = "rustc-hash@1", reason = "fluent-bundle pulls v1, intl-memoizer pulls v2" },
+    { crate = "unicode-width@0.1", reason = "miette pulls v0.1 via textwrap" },
+    { crate = "windows-sys@0.60", reason = "tokio/socket2 lag behind other deps" },
+]
