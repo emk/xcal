@@ -1131,11 +1131,8 @@ dependencies = [
  "clap",
  "miette",
  "owo-colors",
- "regex",
  "serde",
- "similar",
  "tokio",
- "toml",
  "tracing",
  "tracing-subscriber",
  "xcal_test_tools",
@@ -1145,8 +1142,13 @@ dependencies = [
 name = "xcal_test_tools"
 version = "0.1.0"
 dependencies = [
+ "miette",
+ "owo-colors",
+ "regex",
  "serde",
  "serde_json",
+ "similar",
+ "toml",
 ]
 
 [[package]]
@@ -1165,6 +1167,7 @@ dependencies = [
  "tracing-subscriber",
  "unic-langid",
  "uuid",
+ "xcal_test_tools",
 ]
 
 [[package]]

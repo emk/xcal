@@ -1,6 +1,4 @@
 mod connection;
-mod diff;
-mod normalize;
 mod runner;
 mod telnet;
 
@@ -16,9 +14,11 @@ use miette::{miette, IntoDiagnostic, Result};
 use owo_colors::OwoColorize;
 use tracing::debug;
 use tracing_subscriber::EnvFilter;
-use xcal_test_tools::parse_script;
+use xcal_test_tools::{
+    diff::diff_transcript, normalize::Normalizer, parse_script,
+};
 
-use crate::{diff::diff_transcript, normalize::Normalizer, runner::Runner};
+use crate::runner::Runner;
 
 #[derive(Parser)]
 #[command(

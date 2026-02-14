@@ -12,11 +12,8 @@ path = "src/main.rs"
 clap = { version = "4", features = ["derive"] }
 miette = { workspace = true, features = ["fancy"] }
 owo-colors = "4"
-regex = "1"
 serde = { workspace = true }
-similar = "2"
 tokio = { workspace = true, features = ["net", "time", "io-util", "macros", "rt-multi-thread"] }
-toml = "0.8"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 xcal_test_tools = { path = "../../crates/xcal_test_tools" }

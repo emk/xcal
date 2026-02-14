@@ -3,5 +3,5 @@ pattern = '\d/\d{4}'
 replace = "P/PPPP"
 
 [[rules]]
-pattern = '\s+(Arabia|Asylum|Aurora|Avalon|BadLand|Bangkok|Boston|Castle|Deep End|Draconi|Eden|Eriador|Fairy|Fantasia|Fantasy|Hades|Heaven|Inferno|Istanbul|Ithilien|Jungle|Korea|Krystle|LaBrea|London|Lorien|Luna|Madwand|Mercury|Mirkwood|Mordor|Moscow|Nowhere|Nunnery|Orthanc|Paradise|Polaris|Reality|Scheme|Scotland|Sidhe|StarsEnd|Sylvanus|Syntax|Tartarus|ThePits|Tower|Vergil|Void|Vortex|World|Zodiac)\s+'
+pattern = '\s+(Arabia|Asylum|Aurora|Avalon|BadLand|Bangkok|Boston|Castle|Deep End|Draconi|Eden|Eriador|Fairy|Fantasia|Fantasy|Hades|Heaven|Inferno|Istanbul|Ithilien|Jungle|Korea|Krystle|LaBrea|London|Lorien|Luna|Madwand|Mercury|Mirkwood|Mordor|Moscow|Nowhere|Nunnery|Orthanc|Paradise|Polaris|Reality|Scheme|Scotland|Sidhe|StarsEnd|Sylvanus|Syntax|Tartarus|TestPort|ThePits|Tower|Vergil|Void|Vortex|World|Zodiac)\s+'
 replace = " LOCATION "

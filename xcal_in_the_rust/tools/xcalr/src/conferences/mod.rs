@@ -26,6 +26,10 @@ use crate::{
 
 mod cmd;
 #[cfg(test)]
+mod fixture_runner;
+#[cfg(test)]
+mod fixture_tests;
+#[cfg(test)]
 mod test_harness;
 
 /// Record of a user who has left the conference (for the `left` command).

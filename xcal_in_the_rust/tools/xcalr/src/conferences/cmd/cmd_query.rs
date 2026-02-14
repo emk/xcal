@@ -213,7 +213,7 @@ impl UtcDateTime {
     fn to_clock_time(&self) -> FormattedClock {
         let (h, ampm) = self.hour_12();
         FormattedClock {
-            hours: h.to_string(),
+            hours: format!("{h:2}"),
             minutes: format!("{:02}", self.minute),
             seconds: format!("{:02}", self.second),
             ampm,

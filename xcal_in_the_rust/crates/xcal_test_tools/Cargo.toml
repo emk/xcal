@@ -5,5 +5,10 @@ edition = "2021"
 license = "ISC OR MIT OR Apache-2.0"
 
 [dependencies]
+miette = { workspace = true }
+owo-colors = "4"
+regex = "1"
 serde = { workspace = true }
 serde_json = "1"
+similar = "2"
+toml = "0.8"

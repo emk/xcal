@@ -4,21 +4,24 @@ use owo_colors::OwoColorize;
 use similar::{ChangeTag, TextDiff};
 
 /// Result of comparing a single connection's transcript.
-pub struct ConnectionDiff {
+pub struct TranscriptDiff {
+    /// Whether the transcripts matched.
     pub matches: bool,
+    /// Colored unified diff output (empty when `matches` is true).
     pub diff_output: String,
 }
 
 /// Compare expected vs actual transcript for a connection.
 ///
-/// Returns a `ConnectionDiff` with colored unified diff output if they differ.
+/// Returns a [`TranscriptDiff`] with colored unified diff output if they
+/// differ.
 pub fn diff_transcript(
     conn: &str,
     expected: &str,
     actual: &str,
-) -> ConnectionDiff {
+) -> TranscriptDiff {
     if expected == actual {
-        return ConnectionDiff {
+        return TranscriptDiff {
             matches: true,
             diff_output: String::new(),
         };
@@ -33,7 +36,6 @@ pub fn diff_transcript(
     writeln!(output, "{}", format!("+++ {conn}.txt (actual)").bold()).unwrap();
 
     for hunk in diff.unified_diff().context_radius(3).iter_hunks() {
-        // Hunk header in cyan (print only the @@ header, not the full hunk)
         writeln!(output, "{}", hunk.header().cyan()).unwrap();
         for change in hunk.iter_changes() {
             match change.tag() {
@@ -53,7 +55,7 @@ pub fn diff_transcript(
         }
     }
 
-    ConnectionDiff {
+    TranscriptDiff {
         matches: false,
         diff_output: output,
     }

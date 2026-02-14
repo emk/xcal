@@ -1,3 +1,6 @@
+pub mod diff;
+pub mod normalize;
+
 use serde::{Deserialize, Serialize};
 
 /// A single action in a JSONL test script.

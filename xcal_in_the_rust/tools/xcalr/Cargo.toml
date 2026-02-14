@@ -27,3 +27,4 @@ uuid = { workspace = true }
 
 [dev-dependencies]
 dcts = { path = "../../crates/dcts", features = ["test-support"] }
+xcal_test_tools = { path = "../../crates/xcal_test_tools" }
