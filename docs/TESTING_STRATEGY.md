@@ -105,7 +105,7 @@ For in-process tests (levels 1 and 2): no timeouts at all. Everything is
 synchronous.
 
 
-## C server is a shared resource
+## C server and Rust server are shared resources
 
 The C server (`xcal -l` on port 2456) is a single global conference. Only
 one connection can be the master — the first one to connect after a restart.
@@ -126,6 +126,17 @@ In particular:
   isolated, fast, and deterministic. Reserve the live C server for
   end-to-end verification from the top-level session.
 
+Similar rules apply to the Rust server, if we run it separately.
+
+## Tooling: `xcalr serve`
+
+The Rust server can be run locally in TCP mode as follows:
+
+```sh
+cd xcal_in_the_rust && cargo run -p xcalr -- serve --tcp localhost:2457
+```
+
+This can be used to run `xcal-test check` against a live Rust server, for final integration test confirmation.
 
 ## Tooling: `xcal-test`
 
