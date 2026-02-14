@@ -42,6 +42,23 @@ pub fn fantasy_name(addr: IpAddr) -> &'static str {
     FANTASY_NAMES[idx]
 }
 
+/// Returns a regex pattern matching any fantasy port name.
+///
+/// Useful for normalizing location names in test assertions, similar to
+/// how fixture `normalize.toml` files handle timestamps.
+#[cfg(any(test, feature = "test-support"))]
+pub fn fantasy_name_regex() -> &'static str {
+    use std::sync::OnceLock;
+    static PATTERN: OnceLock<String> = OnceLock::new();
+    PATTERN.get_or_init(|| {
+        // Deduplicate names (FANTASY_NAMES has duplicates like "Paradise", "Eriador").
+        let mut unique: Vec<&str> = FANTASY_NAMES.to_vec();
+        unique.sort_unstable();
+        unique.dedup();
+        unique.join("|")
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use std::net::{Ipv4Addr, Ipv6Addr};

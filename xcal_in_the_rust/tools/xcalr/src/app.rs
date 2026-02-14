@@ -70,7 +70,10 @@ impl XcaliberApp {
             }
             PortMessage::InputLine { port_id, input } => {
                 if let Some(conf) = self.conference.as_mut() {
-                    conf.handle_input(port_id, &input)?;
+                    if conf.handle_input(port_id, &input)? {
+                        info!("conference terminated by master, awaiting next connection");
+                        self.conference = None;
+                    }
                 } else {
                     warn!(?port_id, "input line with no active conference");
                 }

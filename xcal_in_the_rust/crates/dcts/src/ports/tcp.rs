@@ -4,9 +4,12 @@
 //! TCP clients. Each connection gets a reader task and a writer task that
 //! communicate with the application via [`PortMessageSink`].
 
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Arc,
+use std::{
+    net::SocketAddr,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
 };
 
 use bytes::{Bytes, BytesMut};
@@ -26,6 +29,7 @@ pub struct TcpPort {
     id: PortId,
     public_name: String,
     admin_name: String,
+    port_address: String,
     /// Sender half of the capacity-1 channel to the writer task.
     /// `None` after `shutdown()` has been called.
     writer_tx: Option<mpsc::Sender<Bytes>>,
@@ -44,6 +48,10 @@ impl Port for TcpPort {
 
     fn admin_name(&self) -> &str {
         &self.admin_name
+    }
+
+    fn port_address(&self) -> &str {
+        &self.port_address
     }
 
     fn try_send(&mut self, data: Bytes) -> Result<(), Bytes> {
@@ -197,10 +205,18 @@ pub async fn listen(
         let port_id = PortId::new();
         let public_name = fantasy::fantasy_name(addr.ip()).to_string();
         let admin_name = addr.to_string();
+        let port_address = format_port_address(&public_name, addr);
         debug!(?port_id, %addr, public_name, "accepted connection");
 
-        spawn_connection(stream, port_id, public_name, admin_name, &*sink)
-            .await;
+        spawn_connection(
+            stream,
+            port_id,
+            public_name,
+            admin_name,
+            port_address,
+            &*sink,
+        )
+        .await;
     }
 }
 
@@ -210,6 +226,7 @@ async fn spawn_connection(
     port_id: PortId,
     public_name: String,
     admin_name: String,
+    port_address: String,
     sink: &dyn PortMessageSink,
 ) {
     let (read_half, write_half) = stream.into_split();
@@ -221,6 +238,7 @@ async fn spawn_connection(
         id: port_id,
         public_name,
         admin_name,
+        port_address,
         writer_tx: Some(writer_tx),
         shutdown: Arc::clone(&disconnected),
     };
@@ -253,6 +271,30 @@ async fn spawn_connection(
         writer_sink,
         disconnected,
     ));
+}
+
+/// Format a DCTS-style port address: `"%8s %d/%04d"`.
+///
+/// C: `map_port(ip, port)` → fantasy name (8-char padded),
+/// `port & 0x07` → low 3 bits of TCP source port,
+/// `(ip & 0xFFFF) % 10000` → low 16 bits of IP mod 10000.
+fn format_port_address(fantasy_name: &str, addr: SocketAddr) -> String {
+    let port_bits = addr.port().checked_rem(8).unwrap_or(0);
+    let ip_part: u16 = match addr.ip() {
+        std::net::IpAddr::V4(v4) => {
+            let octets = v4.octets();
+            let low16 = u16::from(octets[2]).checked_shl(8).unwrap_or(0)
+                | u16::from(octets[3]);
+            low16.checked_rem(10000).unwrap_or(0)
+        }
+        std::net::IpAddr::V6(v6) => {
+            let octets = v6.octets();
+            let low16 = u16::from(octets[14]).checked_shl(8).unwrap_or(0)
+                | u16::from(octets[15]);
+            low16.checked_rem(10000).unwrap_or(0)
+        }
+    };
+    format!("{fantasy_name:>8} {port_bits}/{ip_part:04}")
 }
 
 #[cfg(test)]

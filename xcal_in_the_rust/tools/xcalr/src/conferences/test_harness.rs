@@ -52,6 +52,10 @@ impl Port for TestPort {
         &self.name
     }
 
+    fn port_address(&self) -> &str {
+        "TestPort 0/0000"
+    }
+
     fn try_send(&mut self, data: Bytes) -> Result<(), Bytes> {
         if self.shut_down {
             return Err(data);
@@ -134,7 +138,8 @@ impl TestConference {
             self.connections[idx].as_ref().expect("user not connected");
         let port_id = *port_id;
         let input = bytes::BytesMut::from(line.as_bytes());
-        self.conference
+        let _ = self
+            .conference
             .handle_input(port_id, &input)
             .expect("handle_input failed");
     }
@@ -144,6 +149,20 @@ impl TestConference {
         let idx = usize::from(id.0);
         let (_, buffer) =
             self.connections[idx].as_ref().expect("user not connected");
+        #[allow(clippy::expect_used)]
+        let mut buf = buffer.lock().expect("lock poisoned");
+        let out = String::from_utf8_lossy(&buf).into_owned();
+        buf.clear();
+        out
+    }
+
+    /// Read output for a user by raw index, returning empty string if
+    /// the connection slot doesn't exist (user was never connected or
+    /// was cleaned up by conference termination).
+    pub(crate) fn output_if_connected(&mut self, idx: usize) -> String {
+        let Some(Some((_, buffer))) = self.connections.get(idx) else {
+            return String::new();
+        };
         #[allow(clippy::expect_used)]
         let mut buf = buffer.lock().expect("lock poisoned");
         let out = String::from_utf8_lossy(&buf).into_owned();

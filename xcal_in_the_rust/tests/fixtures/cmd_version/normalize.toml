@@ -1,0 +1,3 @@
+[[rules]]
+pattern = 'v\.\S+'
+replace = "vX.XX"

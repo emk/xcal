@@ -404,7 +404,8 @@ mod tests {
         let mut tc = TestConference::new();
         let master = tc.connect("Explorer");
 
-        tc.input(master, "info");
+        // Use xdl — an extended command that will remain a stub.
+        tc.input(master, "xdl");
         let out = tc.output(master);
 
         assert!(

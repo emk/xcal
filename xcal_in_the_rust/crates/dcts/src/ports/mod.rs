@@ -68,6 +68,14 @@ pub trait Port: std::fmt::Debug + Send {
     /// WARNING: This method must never block.
     fn admin_name(&self) -> &str;
 
+    /// DCTS-style port address shown in PORT/EVERYTHING listings.
+    ///
+    /// Format: `"%8s %d/%04d "` — 8-char-padded fantasy name,
+    /// `client_port & 7`, `ip_low_16_bits % 10000`.
+    ///
+    /// WARNING: This method must never block.
+    fn port_address(&self) -> &str;
+
     /// Try to enqueue bytes for sending to the connected client.
     ///
     /// Maps to C `net_write(up->sd, buf, len)` — called pervasively for command

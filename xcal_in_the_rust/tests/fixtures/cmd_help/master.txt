@@ -17,8 +17,7 @@ more common ones to a single letter.
 
 Tell    To send a message to someone, just type TELL followed by their number.
 ----    When the terminal prints "Speak!", type your message.  To finish the
-        message,bye
- type an EXTRA carriage return.  For information on how to send
+        message, type an EXTRA carriage return.  For information on how to send
         to more than one person, or to everyone, type EXPLAIN TELL.  Since this
         command is used so much, you can type JUST the number of the person you
         want to talk to, without the TELL command before it.
@@ -51,5 +50,6 @@ RA      The RA (Reject Alls) command can be used if you don't want to receive
         speed terminal and are getting swamped with messages  (type EXPLAIN
         RA for information on such things as how undo the RA command).
 
+bye
 
 Conference "XYZ" has terminated.

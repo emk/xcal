@@ -4,7 +4,8 @@
 {"conn": "master", "action": "send", "text": "Explorer"}
 {"conn": "master", "action": "expect", "contains": "Enter command"}
 {"conn": "master", "action": "send", "text": "help"}
-{"conn": "master", "action": "expect", "contains": "General information"}
+{"conn": "master", "action": "expect", "contains": "RA command"}
+{"conn": "master", "action": "drain"}
 {"conn": "master", "action": "send", "text": "bye"}
 {"conn": "master", "action": "drain", "quiet_ms": 100}
 {"conn": "master", "action": "disconnect"}

@@ -5,3 +5,15 @@ replace = "HH:MM:SS xm"
 [[rules]]
 pattern = '\d{1,2}/\d{1,2}/\d{2,4}'
 replace = "M/D/YY"
+
+[[rules]]
+pattern = 'Time left:\s+\d+ minute'
+replace = "Time left: NN minute"
+
+[[rules]]
+pattern = 'xcal\w* v\.\S+'
+replace = "xcal vX.XX"
+
+[[rules]]
+pattern = 'Core size:\s+\d+K'
+replace = "Core size: NNNNK"
