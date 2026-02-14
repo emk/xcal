@@ -4,13 +4,41 @@
 //! human-readable content only; wire framing (`\n` prefix/suffix, BEL bytes) is
 //! applied by this module. The transport layer converts `\n` to `\r\n`.
 
-pub use fluent_bundle::FluentArgs;
-use fluent_bundle::{FluentBundle, FluentResource};
+#![allow(dead_code)]
+
+use fluent_bundle::{FluentArgs, FluentBundle, FluentResource};
 use unic_langid::LanguageIdentifier;
+
+use crate::users::UserId;
+
+/// AM/PM selector for clock display.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AmPm {
+    Am,
+    Pm,
+}
+
+/// Time unit for time warnings.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TimeUnit {
+    Second,
+    Minute,
+}
+
+/// Formatted clock time components.
+///
+/// Fields are `&str` because the caller does numeric formatting (matching
+/// the C convention where `sprintf` precedes the lang call).
+pub struct ClockTime<'a> {
+    pub hours: &'a str,
+    pub minutes: &'a str,
+    pub seconds: &'a str,
+    pub ampm: AmPm,
+}
 
 /// All 64 message keys, matching the original C identifiers from `lang/*.lf`.
 #[allow(missing_docs)]
-pub mod keys {
+mod keys {
     // Connection
     pub const CONFULL: &str = "confull";
     pub const CONTERM: &str = "conterm";
@@ -161,6 +189,42 @@ fn framing(key: &str) -> (&'static str, &'static str) {
     }
 }
 
+/// Build `FluentArgs` for clock-time messages.
+fn clock_args<'a>(time: &ClockTime<'a>) -> FluentArgs<'a> {
+    let mut args = FluentArgs::new();
+    args.set("hours", time.hours);
+    args.set("minutes", time.minutes);
+    args.set("seconds", time.seconds);
+    args.set("ampm", match time.ampm {
+        AmPm::Am => "am",
+        AmPm::Pm => "pm",
+    });
+    args
+}
+
+/// Generate a no-argument message method.
+macro_rules! no_arg_message {
+    ($(#[$meta:meta])* $method:ident, $key:expr) => {
+        $(#[$meta])*
+        pub fn $method(&self) -> String {
+            self.format($key, None)
+        }
+    };
+}
+
+/// Generate a method taking `(UserId, &str)` for port+name messages.
+macro_rules! port_name_message {
+    ($(#[$meta:meta])* $method:ident, $key:expr) => {
+        $(#[$meta])*
+        pub fn $method(&self, id: UserId, name: &str) -> String {
+            let mut args = FluentArgs::new();
+            args.set("number", id.to_string());
+            args.set("name", name);
+            self.format($key, Some(&args))
+        }
+    };
+}
+
 /// Localized message formatter backed by Project Fluent.
 ///
 /// Loads a `.ftl` resource at construction time and validates that all
@@ -202,22 +266,14 @@ impl Messages {
     }
 
     /// Format a message with wire framing applied.
-    ///
-    /// The returned string includes the protocol prefix/suffix (`\n`, BEL)
-    /// appropriate for the message key. Use [`format_raw`](Self::format_raw)
-    /// when the message is used as a data value rather than direct output.
-    pub fn format(&self, key: &str, args: Option<&FluentArgs<'_>>) -> String {
+    fn format(&self, key: &str, args: Option<&FluentArgs<'_>>) -> String {
         let (prefix, suffix) = framing(key);
         let text = self.format_raw(key, args);
         format!("{prefix}{text}{suffix}")
     }
 
     /// Format a message without wire framing.
-    ///
-    /// Returns the Fluent text content only, with no prefix/suffix bytes.
-    /// Useful for messages used as data values (e.g. `helptop` is a topic
-    /// name passed to another function, not output directly).
-    pub fn format_raw(
+    fn format_raw(
         &self,
         key: &str,
         args: Option<&FluentArgs<'_>>,
@@ -233,6 +289,169 @@ impl Messages {
         let result = self.bundle.format_pattern(pattern, args, &mut errors);
         assert!(errors.is_empty(), "Errors formatting {key}: {errors:?}");
         result.into_owned()
+    }
+
+    // ── No-arg methods (45) ──────────────────────────────────────────
+
+    // Connection
+    no_arg_message!(conference_full, keys::CONFULL);
+    no_arg_message!(conference_terminated, keys::CONTERM);
+    no_arg_message!(welcome, keys::WELCOME);
+    no_arg_message!(enter_name, keys::ENTNAME);
+    no_arg_message!(master_welcome, keys::MWELC);
+    no_arg_message!(intro, keys::INTRO);
+
+    // Composing
+    no_arg_message!(done, keys::DONEMSG);
+    no_arg_message!(speak, keys::SPEAK);
+    no_arg_message!(users_out, keys::OUTMSG);
+    no_arg_message!(you_are_out, keys::YOUOUT);
+    no_arg_message!(users_ignoring, keys::IGMSG);
+    no_arg_message!(disconnected, keys::DISCMSG);
+    no_arg_message!(no_recipients, keys::NORCPT);
+    no_arg_message!(message_sent, keys::SENTMSG);
+    no_arg_message!(message_not_sent, keys::MNSMSG);
+    no_arg_message!(empty_message, keys::EMPTY);
+
+    // Errors
+    no_arg_message!(command_error, keys::CMDERR);
+    no_arg_message!(format_error, keys::FMTERR);
+    no_arg_message!(invalid_arguments, keys::INVARG);
+    no_arg_message!(not_implemented, keys::UNIMP);
+    no_arg_message!(bad_character, keys::BADCHAR);
+
+    // Prompts
+    no_arg_message!(new_warning_prompt, keys::NEWWARN);
+    no_arg_message!(new_name_prompt, keys::NEWNAME);
+    no_arg_message!(no_one_left, keys::NOLEFT);
+    no_arg_message!(no_messages, keys::NOMSGS);
+    no_arg_message!(tell_all_disabled, keys::NOALLS);
+    no_arg_message!(command_line_prompt, keys::LINMSG);
+
+    // Ports/bounce
+    no_arg_message!(cant_port, keys::NOPORT);
+    no_arg_message!(rejecting_ports, keys::RPMSG);
+    no_arg_message!(you_are_bounced, keys::BOUNCED);
+    no_arg_message!(bounce_list_full, keys::BLFULL);
+    no_arg_message!(no_bounced_ports, keys::NBPORT);
+
+    // Master transfer
+    no_arg_message!(now_master, keys::NOWMAST);
+    no_arg_message!(no_longer_master, keys::NORMAL);
+    no_arg_message!(you_are_passed, keys::PASSED);
+    no_arg_message!(must_pass_to_master, keys::MPTMMSG);
+    no_arg_message!(new_users_header, keys::PNUMSG);
+
+    // Help/explain
+    no_arg_message!(cant_explain, keys::CANTEXP);
+    no_arg_message!(help_file_not_found, keys::FNFMSG);
+    no_arg_message!(help_topic, keys::HELPTOP);
+
+    // Left
+    no_arg_message!(left_header, keys::LEFTHDR);
+
+    // Language
+    no_arg_message!(new_language_prompt, keys::NEWLANG);
+    no_arg_message!(language_not_available, keys::NOLANG);
+
+    // Telnet
+    no_arg_message!(are_you_there, keys::AYTMSG);
+    no_arg_message!(break_response, keys::BRKMSG);
+
+    // ── Port+name methods (7) ────────────────────────────────────────
+
+    port_name_message!(talking_with, keys::TLKWITH);
+    port_name_message!(new_user, keys::NEWUSER);
+    port_name_message!(message_from, keys::MSGFROM);
+    port_name_message!(message_to_all_from, keys::ALLFROM);
+    port_name_message!(name_changed, keys::NAMENOT);
+    port_name_message!(user_exited, keys::EXNOT);
+    port_name_message!(user_killed, keys::KILLNOT);
+
+    // ── Hand-written methods (12) ────────────────────────────────────
+
+    pub fn time_warning(&self, count: i64, unit: TimeUnit) -> String {
+        let mut args = FluentArgs::new();
+        args.set("count", count);
+        args.set("unit", match unit {
+            TimeUnit::Second => "second",
+            TimeUnit::Minute => "minute",
+        });
+        self.format(keys::TIMEWRN, Some(&args))
+    }
+
+    pub fn clock_time(&self, time: &ClockTime<'_>) -> String {
+        let args = clock_args(time);
+        self.format(keys::CLKMSG, Some(&args))
+    }
+
+    pub fn time_left(&self, minutes: u32) -> String {
+        let mut args = FluentArgs::new();
+        args.set("minutes", minutes.to_string());
+        self.format(keys::TIMELFT, Some(&args))
+    }
+
+    pub fn uptime(&self, time: &ClockTime<'_>) -> String {
+        let args = clock_args(time);
+        self.format(keys::UPAT, Some(&args))
+    }
+
+    pub fn uptime_with_date(&self, time: &ClockTime<'_>, date: &str) -> String {
+        let mut args = clock_args(time);
+        args.set("date", date);
+        self.format(keys::UPAT2, Some(&args))
+    }
+
+    pub fn left_count(&self, count: u16) -> String {
+        let mut args = FluentArgs::new();
+        args.set("count", format!("{count:03}"));
+        self.format(keys::LEFTMSG, Some(&args))
+    }
+
+    pub fn user_count(&self, count: u16) -> String {
+        let mut args = FluentArgs::new();
+        args.set("count", count.to_string());
+        self.format(keys::NUMUSRS, Some(&args))
+    }
+
+    pub fn info(
+        &self,
+        users: u16,
+        max: u16,
+        server: &str,
+        version: &str,
+    ) -> String {
+        let mut args = FluentArgs::new();
+        args.set("users", users.to_string());
+        args.set("max", max.to_string());
+        args.set("server", server);
+        args.set("version", version);
+        self.format(keys::INFOMSG, Some(&args))
+    }
+
+    pub fn version(&self, version: &str) -> String {
+        let mut args = FluentArgs::new();
+        args.set("version", version);
+        self.format(keys::XCALVER, Some(&args))
+    }
+
+    pub fn current_language(&self, language: &str) -> String {
+        let mut args = FluentArgs::new();
+        args.set("language", language);
+        self.format(keys::CURLANG, Some(&args))
+    }
+
+    pub fn cru_now(&self, crus: &str, max: &str) -> String {
+        let mut args = FluentArgs::new();
+        args.set("crus", crus);
+        args.set("max", max);
+        self.format(keys::CRUNOW, Some(&args))
+    }
+
+    pub fn core_size(&self, size: &str) -> String {
+        let mut args = FluentArgs::new();
+        args.set("size", size);
+        self.format(keys::CORESIZE, Some(&args))
     }
 }
 
@@ -251,22 +470,22 @@ mod tests {
         assert_eq!(keys::ALL.len(), 64);
         // Messages::new() already validates all keys exist in the bundle.
         // Verify we can at least resolve no-arg messages without error.
-        let _ = m.format_raw(keys::SPEAK, None);
-        let _ = m.format_raw(keys::HELPTOP, None);
+        let _ = m.speak();
+        let _ = m.help_topic();
     }
 
     #[test]
     fn bare_simple() {
         let m = msgs();
-        assert_eq!(m.format(keys::HELPTOP, None), "help");
-        assert_eq!(m.format(keys::ENTNAME, None), "Please enter your name--");
+        assert_eq!(m.help_topic(), "help");
+        assert_eq!(m.enter_name(), "Please enter your name--");
     }
 
     #[test]
     fn bare_multiline() {
         let m = msgs();
         assert_eq!(
-            m.format(keys::WELCOME, None),
+            m.welcome(),
             "Hello.  Welcome to Xcaliber.\nPlease enter your name--"
         );
     }
@@ -275,7 +494,7 @@ mod tests {
     fn bare_multiline_trailing_space() {
         let m = msgs();
         assert_eq!(
-            m.format(keys::MWELC, None),
+            m.master_welcome(),
             "Hello.  You are the master terminal.\nPlease enter your name. "
         );
     }
@@ -283,18 +502,15 @@ mod tests {
     #[test]
     fn wrapped_simple() {
         let m = msgs();
-        assert_eq!(m.format(keys::SPEAK, None), "\nSpeak!\n");
-        assert_eq!(m.format(keys::DONEMSG, None), "\nDone\n");
+        assert_eq!(m.speak(), "\nSpeak!\n");
+        assert_eq!(m.done(), "\nDone\n");
     }
 
     #[test]
     fn wrapped_with_args() {
         let m = msgs();
-        let mut args = FluentArgs::new();
-        args.set("number", "0");
-        args.set("name", "Explorer");
         assert_eq!(
-            m.format(keys::NEWUSER, Some(&args)),
+            m.new_user(UserId(0), "Explorer"),
             "\nNew user at #0: Explorer\n"
         );
     }
@@ -303,7 +519,7 @@ mod tests {
     fn wrapped_multiline() {
         let m = msgs();
         assert_eq!(
-            m.format(keys::INTRO, None),
+            m.intro(),
             "\nEnter command (type 'HELP' for instructions)\n\
              Changes afoot!  Type EXPLAIN NEW for what's new!\n"
         );
@@ -312,9 +528,9 @@ mod tests {
     #[test]
     fn trailing() {
         let m = msgs();
-        assert_eq!(m.format(keys::SENTMSG, None), "Message sent\n");
+        assert_eq!(m.message_sent(), "Message sent\n");
         assert_eq!(
-            m.format(keys::CONFULL, None),
+            m.conference_full(),
             "Xcaliber is full--try again later\n"
         );
     }
@@ -322,11 +538,8 @@ mod tests {
     #[test]
     fn trailing_with_args() {
         let m = msgs();
-        let mut args = FluentArgs::new();
-        args.set("number", "0");
-        args.set("name", "Explorer");
         assert_eq!(
-            m.format(keys::TLKWITH, Some(&args)),
+            m.talking_with(UserId(0), "Explorer"),
             "You are talking with #0: Explorer\n"
         );
     }
@@ -334,25 +547,22 @@ mod tests {
     #[test]
     fn leading() {
         let m = msgs();
-        assert_eq!(m.format(keys::YOUOUT, None), "\nYou are now out...");
-        assert_eq!(m.format(keys::NEWWARN, None), "\nNew warning--");
-        assert_eq!(m.format(keys::LINMSG, None), "\nCommand line--");
+        assert_eq!(m.you_are_out(), "\nYou are now out...");
+        assert_eq!(m.new_warning_prompt(), "\nNew warning--");
+        assert_eq!(m.command_line_prompt(), "\nCommand line--");
     }
 
     #[test]
     fn leading_spaces() {
         let m = msgs();
-        assert_eq!(m.format(keys::PNUMSG, None), "  New users\n");
+        assert_eq!(m.new_users_header(), "  New users\n");
     }
 
     #[test]
     fn bel_framing() {
         let m = msgs();
-        let mut args = FluentArgs::new();
-        args.set("count", 5_i64);
-        args.set("unit", "minute");
         assert_eq!(
-            m.format(keys::TIMEWRN, Some(&args)),
+            m.time_warning(5, TimeUnit::Minute),
             "\n\x07\x07You have about 5 minutes left\n"
         );
     }
@@ -360,18 +570,12 @@ mod tests {
     #[test]
     fn timewrn_singular() {
         let m = msgs();
-        let mut args = FluentArgs::new();
-        args.set("count", 1_i64);
-        args.set("unit", "minute");
         assert_eq!(
-            m.format(keys::TIMEWRN, Some(&args)),
+            m.time_warning(1, TimeUnit::Minute),
             "\n\x07\x07You have about 1 minute left\n"
         );
-
-        args.set("count", 1_i64);
-        args.set("unit", "second");
         assert_eq!(
-            m.format(keys::TIMEWRN, Some(&args)),
+            m.time_warning(1, TimeUnit::Second),
             "\n\x07\x07You have about 1 second left\n"
         );
     }
@@ -379,11 +583,8 @@ mod tests {
     #[test]
     fn timewrn_plural_seconds() {
         let m = msgs();
-        let mut args = FluentArgs::new();
-        args.set("count", 30_i64);
-        args.set("unit", "second");
         assert_eq!(
-            m.format(keys::TIMEWRN, Some(&args)),
+            m.time_warning(30, TimeUnit::Second),
             "\n\x07\x07You have about 30 seconds left\n"
         );
     }
@@ -391,13 +592,13 @@ mod tests {
     #[test]
     fn clock_pm() {
         let m = msgs();
-        let mut args = FluentArgs::new();
-        args.set("hours", "2");
-        args.set("minutes", "30");
-        args.set("seconds", "05");
-        args.set("ampm", "pm");
         assert_eq!(
-            m.format(keys::CLKMSG, Some(&args)),
+            m.clock_time(&ClockTime {
+                hours: "2",
+                minutes: "30",
+                seconds: "05",
+                ampm: AmPm::Pm,
+            }),
             "Time now: 2:30:05 p.m.\n"
         );
     }
@@ -405,13 +606,13 @@ mod tests {
     #[test]
     fn clock_am() {
         let m = msgs();
-        let mut args = FluentArgs::new();
-        args.set("hours", "10");
-        args.set("minutes", "00");
-        args.set("seconds", "00");
-        args.set("ampm", "am");
         assert_eq!(
-            m.format(keys::CLKMSG, Some(&args)),
+            m.clock_time(&ClockTime {
+                hours: "10",
+                minutes: "00",
+                seconds: "00",
+                ampm: AmPm::Am,
+            }),
             "Time now: 10:00:00 a.m.\n"
         );
     }
@@ -419,14 +620,16 @@ mod tests {
     #[test]
     fn uptime_with_date() {
         let m = msgs();
-        let mut args = FluentArgs::new();
-        args.set("hours", "2");
-        args.set("minutes", "30");
-        args.set("seconds", "05");
-        args.set("ampm", "pm");
-        args.set("date", "2/11/26");
         assert_eq!(
-            m.format(keys::UPAT2, Some(&args)),
+            m.uptime_with_date(
+                &ClockTime {
+                    hours: "2",
+                    minutes: "30",
+                    seconds: "05",
+                    ampm: AmPm::Pm,
+                },
+                "2/11/26",
+            ),
             "\nUp at 2:30:05 p.m. on 2/11/26\n"
         );
     }
@@ -434,13 +637,8 @@ mod tests {
     #[test]
     fn infomsg_multiline() {
         let m = msgs();
-        let mut args = FluentArgs::new();
-        args.set("users", "5");
-        args.set("max", "10");
-        args.set("server", "localhost");
-        args.set("version", "2.0");
         assert_eq!(
-            m.format(keys::INFOMSG, Some(&args)),
+            m.info(5, 10, "localhost", "2.0"),
             " Users: 5\n   max: 10\nServer: localhost v.2.0"
         );
     }
@@ -448,32 +646,17 @@ mod tests {
     #[test]
     fn leftmsg_preformatted() {
         let m = msgs();
-        let mut args = FluentArgs::new();
-        args.set("count", "003");
         assert_eq!(
-            m.format(keys::LEFTMSG, Some(&args)),
+            m.left_count(3),
             "003 Users have left Xcaliber\n"
-        );
-    }
-
-    #[test]
-    fn format_raw_no_framing() {
-        let m = msgs();
-        // speak is Wrapped, but format_raw returns just the text
-        assert_eq!(m.format_raw(keys::SPEAK, None), "Speak!");
-        assert_eq!(
-            m.format_raw(keys::CONFULL, None),
-            "Xcaliber is full--try again later"
         );
     }
 
     #[test]
     fn version_multiline() {
         let m = msgs();
-        let mut args = FluentArgs::new();
-        args.set("version", "2.0");
         assert_eq!(
-            m.format(keys::XCALVER, Some(&args)),
+            m.version("2.0"),
             "\nXcaliber II v.2.0 by Michael J. Fromberger\n\
              Copyright (C) 1997-1998 All Rights Reserved\n"
         );
@@ -482,11 +665,8 @@ mod tests {
     #[test]
     fn crunow_multiline() {
         let m = msgs();
-        let mut args = FluentArgs::new();
-        args.set("crus", "1.234");
-        args.set("max", "100");
         assert_eq!(
-            m.format(keys::CRUNOW, Some(&args)),
+            m.cru_now("1.234", "100"),
             "\nCRUs now:  1.234\n     max:  100\n"
         );
     }
@@ -494,8 +674,6 @@ mod tests {
     #[test]
     fn numusrs_preformatted() {
         let m = msgs();
-        let mut args = FluentArgs::new();
-        args.set("count", "7");
-        assert_eq!(m.format(keys::NUMUSRS, Some(&args)), "\n7 user(s)\n");
+        assert_eq!(m.user_count(7), "\n7 user(s)\n");
     }
 }

@@ -33,7 +33,7 @@ Xcaliber Mark II is a multi-user conference (chat) server written in C over Chri
 
 ## Running `xcal`
 
-This will normally be done by the user, but the command is `xcal -l`. This will start a server that automatically restarts after a conference exists. The server will run on port 2345, using TCP socket with very minimal telnet negotation support (it refuses everything).
+This will normally be done by the user, but the command is `xcal -l`. This will start a server that automatically restarts after a conference exists. The server will run on port 2456, using TCP socket with very minimal telnet negotation support (it refuses everything).
 
 ## Testing the protocol with `xcal-test`
 

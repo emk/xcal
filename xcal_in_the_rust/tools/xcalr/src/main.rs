@@ -8,19 +8,16 @@ mod messages;
 mod users;
 
 use help::HelpTopics;
-use lang::{keys, FluentArgs, Messages};
+use lang::Messages;
+use users::UserId;
 
 fn main() {
     let m = Messages::new();
 
     // Master welcome sequence: mwelc (Bare) + intro (Wrapped) + tlkwith (Trailing)
-    let mwelc = m.format(keys::MWELC, None);
-    let intro = m.format(keys::INTRO, None);
-
-    let mut args = FluentArgs::new();
-    args.set("number", "0");
-    args.set("name", "Demo");
-    let tlkwith = m.format(keys::TLKWITH, Some(&args));
+    let mwelc = m.master_welcome();
+    let intro = m.intro();
+    let tlkwith = m.talking_with(UserId(0), "Demo");
 
     print!("{mwelc}{intro}{tlkwith}");
 

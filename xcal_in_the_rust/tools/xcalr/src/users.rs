@@ -6,7 +6,7 @@
 
 #![allow(dead_code)]
 
-use std::{collections::VecDeque, sync::Arc, time::Instant};
+use std::{collections::VecDeque, fmt, sync::Arc, time::Instant};
 
 use bytes::BytesMut;
 use dcts::ports::Port;
@@ -16,6 +16,12 @@ use crate::messages::Message;
 /// Slot index into the conference user array (0..max_users).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct UserId(pub u8);
+
+impl fmt::Display for UserId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 /// A compact set of users, one bit per slot. Supports up to 64 users.
 ///
