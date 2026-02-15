@@ -9,6 +9,7 @@ members = [
 
 [workspace.dependencies]
 async-trait = "0.1"
+chrono = { version = "0.4", default-features = false, features = ["std", "clock"] }
 bytes = "1"
 clap = { version = "4", features = ["derive"] }
 miette = "7"

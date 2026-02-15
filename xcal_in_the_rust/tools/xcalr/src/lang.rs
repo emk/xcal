@@ -6,17 +6,11 @@
 
 #![allow(dead_code)]
 
+use chrono::{DateTime, Datelike, Timelike, Utc};
 use fluent_bundle::{FluentArgs, FluentBundle, FluentResource};
 use unic_langid::LanguageIdentifier;
 
 use crate::users::UserId;
-
-/// AM/PM selector for clock display.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum AmPm {
-    Am,
-    Pm,
-}
 
 /// Time unit for time warnings.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -25,18 +19,7 @@ pub enum TimeUnit {
     Minute,
 }
 
-/// Formatted clock time components.
-///
-/// Fields are `&str` because the caller does numeric formatting (matching
-/// the C convention where `sprintf` precedes the lang call).
-pub struct ClockTime<'a> {
-    pub hours: &'a str,
-    pub minutes: &'a str,
-    pub seconds: &'a str,
-    pub ampm: AmPm,
-}
-
-/// All 64 message keys, matching the original C identifiers from `lang/*.lf`.
+/// All 65 message keys, matching the original C identifiers from `lang/*.lf`.
 #[allow(missing_docs)]
 mod keys {
     // Connection
@@ -110,6 +93,7 @@ mod keys {
     // Left/users/info
     pub const LEFTMSG: &str = "leftmsg";
     pub const LEFTHDR: &str = "lefthdr";
+    pub const LEFTENTRY: &str = "leftentry";
     pub const UPAT: &str = "upat";
     pub const UPAT2: &str = "upat2";
     pub const NUMUSRS: &str = "numusrs";
@@ -129,7 +113,7 @@ mod keys {
     pub const AYTMSG: &str = "aytmsg";
     pub const BRKMSG: &str = "brkmsg";
 
-    /// All 64 message keys for validation.
+    /// All 65 message keys for validation.
     pub const ALL: &[&str] = &[
         CONFULL, CONTERM, WELCOME, ENTNAME, MWELC, INTRO, TLKWITH, NEWUSER,
         DONEMSG, MSGFROM, ALLFROM, NAMENOT, EXNOT, KILLNOT, SPEAK, OUTMSG,
@@ -137,8 +121,8 @@ mod keys {
         INVARG, UNIMP, BADCHAR, NEWWARN, NEWNAME, NOLEFT, NOMSGS, NOALLS,
         LINMSG, NOPORT, RPMSG, BOUNCED, BLFULL, NBPORT, NOWMAST, NORMAL,
         PASSED, MPTMMSG, PNUMSG, TIMEWRN, CLKMSG, TIMELFT, CANTEXP, FNFMSG,
-        HELPTOP, LEFTMSG, LEFTHDR, UPAT, UPAT2, NUMUSRS, INFOMSG, XCALVER,
-        NEWLANG, NOLANG, CURLANG, CRUNOW, CORESIZE, AYTMSG, BRKMSG,
+        HELPTOP, LEFTMSG, LEFTHDR, LEFTENTRY, UPAT, UPAT2, NUMUSRS, INFOMSG,
+        XCALVER, NEWLANG, NOLANG, CURLANG, CRUNOW, CORESIZE, AYTMSG, BRKMSG,
     ];
 }
 
@@ -152,12 +136,13 @@ mod keys {
 /// - **BEL** `("\n\x07\x07", "\n")`: `timewrn` only
 fn framing(key: &str) -> (&'static str, &'static str) {
     match key {
-        // Bare (5)
+        // Bare (6)
         keys::ENTNAME
         | keys::WELCOME
         | keys::MWELC
         | keys::HELPTOP
-        | keys::INFOMSG => ("", ""),
+        | keys::INFOMSG
+        | keys::LEFTENTRY => ("", ""),
 
         // Leading (6)
         keys::YOUOUT
@@ -189,19 +174,14 @@ fn framing(key: &str) -> (&'static str, &'static str) {
     }
 }
 
-/// Build `FluentArgs` for clock-time messages.
-fn clock_args<'a>(time: &ClockTime<'a>) -> FluentArgs<'a> {
+/// Decompose a `DateTime` into `FluentArgs` for clock display.
+fn datetime_clock_args(dt: DateTime<Utc>) -> FluentArgs<'static> {
+    let (is_pm, h12) = dt.hour12();
     let mut args = FluentArgs::new();
-    args.set("hours", time.hours);
-    args.set("minutes", time.minutes);
-    args.set("seconds", time.seconds);
-    args.set(
-        "ampm",
-        match time.ampm {
-            AmPm::Am => "am",
-            AmPm::Pm => "pm",
-        },
-    );
+    args.set("hours", format!("{h12:2}"));
+    args.set("minutes", format!("{:02}", dt.minute()));
+    args.set("seconds", format!("{:02}", dt.second()));
+    args.set("ampm", if is_pm { "pm" } else { "am" });
     args
 }
 
@@ -382,8 +362,9 @@ impl Lang {
         self.format(keys::TIMEWRN, Some(&args))
     }
 
-    pub fn clock_time(&self, time: &ClockTime<'_>) -> String {
-        let args = clock_args(time);
+    /// Format the current clock time.
+    pub fn clock_time(&self, dt: DateTime<Utc>) -> String {
+        let args = datetime_clock_args(dt);
         self.format(keys::CLKMSG, Some(&args))
     }
 
@@ -393,15 +374,30 @@ impl Lang {
         self.format(keys::TIMELFT, Some(&args))
     }
 
-    pub fn uptime(&self, time: &ClockTime<'_>) -> String {
-        let args = clock_args(time);
+    /// Format "Xcaliber up at ..." message.
+    pub fn uptime(&self, dt: DateTime<Utc>) -> String {
+        let args = datetime_clock_args(dt);
         self.format(keys::UPAT, Some(&args))
     }
 
-    pub fn uptime_with_date(&self, time: &ClockTime<'_>, date: &str) -> String {
-        let mut args = clock_args(time);
-        args.set("date", date);
+    /// Format "Up at ... on M/D/YY" message.
+    pub fn uptime_with_date(&self, dt: DateTime<Utc>) -> String {
+        let mut args = datetime_clock_args(dt);
+        let short_year = dt.year().checked_rem(100).unwrap_or(0);
+        args.set("date", format!("{}/{}/{:02}", dt.month(), dt.day(), short_year));
         self.format(keys::UPAT2, Some(&args))
+    }
+
+    /// Format a single line in the LEFT listing.
+    pub fn left_entry(&self, dt: DateTime<Utc>, was_killed: bool, name: &str) -> String {
+        let (is_pm, h12) = dt.hour12();
+        let _ = is_pm; // hour12() for 12h conversion; AM/PM not shown in left listing
+        let mut args = FluentArgs::new();
+        args.set("hours", format!("{h12:02}"));
+        args.set("minutes", format!("{:02}", dt.minute()));
+        args.set("killed", if was_killed { "K" } else { " " });
+        args.set("name", name.to_string());
+        self.format(keys::LEFTENTRY, Some(&args))
     }
 
     pub fn left_count(&self, count: u16) -> String {
@@ -461,6 +457,7 @@ impl Lang {
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
+    use chrono::TimeZone;
 
     fn msgs() -> Lang {
         Lang::new()
@@ -469,7 +466,7 @@ mod tests {
     #[test]
     fn all_keys_present() {
         let m = msgs();
-        assert_eq!(keys::ALL.len(), 64);
+        assert_eq!(keys::ALL.len(), 65);
         // Messages::new() already validates all keys exist in the bundle.
         // Verify we can at least resolve no-arg messages without error.
         let _ = m.speak();
@@ -591,46 +588,44 @@ mod tests {
     #[test]
     fn clock_pm() {
         let m = msgs();
-        assert_eq!(
-            m.clock_time(&ClockTime {
-                hours: "2",
-                minutes: "30",
-                seconds: "05",
-                ampm: AmPm::Pm,
-            }),
-            "Time now: 2:30:05 p.m.\n"
-        );
+        // 14:30:05 UTC
+        let dt = Utc.with_ymd_and_hms(2026, 2, 11, 14, 30, 5).unwrap();
+        assert_eq!(m.clock_time(dt), "Time now:  2:30:05 p.m.\n");
     }
 
     #[test]
     fn clock_am() {
         let m = msgs();
-        assert_eq!(
-            m.clock_time(&ClockTime {
-                hours: "10",
-                minutes: "00",
-                seconds: "00",
-                ampm: AmPm::Am,
-            }),
-            "Time now: 10:00:00 a.m.\n"
-        );
+        // 10:00:00 UTC
+        let dt = Utc.with_ymd_and_hms(2026, 2, 11, 10, 0, 0).unwrap();
+        assert_eq!(m.clock_time(dt), "Time now: 10:00:00 a.m.\n");
     }
 
     #[test]
     fn uptime_with_date() {
         let m = msgs();
+        // 14:30:05 UTC on 2/11/26
+        let dt = Utc.with_ymd_and_hms(2026, 2, 11, 14, 30, 5).unwrap();
         assert_eq!(
-            m.uptime_with_date(
-                &ClockTime {
-                    hours: "2",
-                    minutes: "30",
-                    seconds: "05",
-                    ampm: AmPm::Pm,
-                },
-                "2/11/26",
-            ),
-            "\nUp at 2:30:05 p.m. on 2/11/26\n"
+            m.uptime_with_date(dt),
+            "\nUp at  2:30:05 p.m. on 2/11/26\n"
         );
+    }
+
+    #[test]
+    fn left_entry_normal() {
+        let m = msgs();
+        // 14:30 UTC
+        let dt = Utc.with_ymd_and_hms(2026, 2, 11, 14, 30, 0).unwrap();
+        assert_eq!(m.left_entry(dt, false, "Explorer"), "02:30  Explorer");
+    }
+
+    #[test]
+    fn left_entry_killed() {
+        let m = msgs();
+        // 09:05 UTC
+        let dt = Utc.with_ymd_and_hms(2026, 2, 11, 9, 5, 0).unwrap();
+        assert_eq!(m.left_entry(dt, true, "Wanderer"), "09:05K Wanderer");
     }
 
     #[test]

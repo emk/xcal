@@ -1,19 +1,15 @@
 //! Handlers for user-listing commands: who, port, everything, tty, left,
 //! users, below, extended who.
 
-use std::{
-    fmt::Write as _,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fmt::Write as _;
+
+use chrono::{DateTime, Utc};
 
 use super::{
     super::{Conference, WhoColumns},
     CommandResult,
 };
-use crate::{
-    lang::AmPm,
-    users::{Role, UserId},
-};
+use crate::users::{Role, UserId};
 
 pub fn cmd_who(
     conf: &mut Conference,
@@ -155,14 +151,11 @@ pub fn cmd_left(
     }
 
     // C: cmd_left outputs upat (conference start time) first.
-    let start_epoch = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs()
-        .saturating_sub(conf.started_at.elapsed().as_secs());
-    let start_ct = epoch_to_12h(start_epoch);
-    let ct = start_ct.as_clock_time();
-    let uptime = conf.lang.uptime(&ct);
+    let now = Utc::now();
+    let elapsed = conf.started_at.elapsed();
+    let chrono_elapsed = chrono::Duration::from_std(elapsed).unwrap_or_default();
+    let start = now.checked_sub_signed(chrono_elapsed).unwrap_or(now);
+    let uptime = conf.lang.uptime(start);
 
     #[allow(clippy::expect_used)]
     let count = u16::try_from(conf.left.len()).expect("left count fits u16");
@@ -186,91 +179,13 @@ pub fn cmd_left(
     output.push_str(&header);
 
     for left_user in &conf.left {
-        // C: uses absolute time-of-day (localtime) not elapsed time.
-        let epoch_secs = left_user
-            .departed_at
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs();
-        let day_secs = epoch_secs.checked_rem(86400).unwrap_or(0);
-        let hour_24 =
-            u32::try_from(day_secs.checked_div(3600).unwrap_or(0)).unwrap_or(0);
-        let mins = u32::try_from(
-            day_secs
-                .checked_rem(3600)
-                .unwrap_or(0)
-                .checked_div(60)
-                .unwrap_or(0),
-        )
-        .unwrap_or(0);
-        let hour_12 = match hour_24 {
-            0 => 12,
-            h @ 1..=12 => h,
-            h => h.saturating_sub(12),
-        };
-
-        let k = if left_user.was_killed { "K" } else { " " };
-
-        let _ = writeln!(
-            output,
-            "{hour_12:02}:{mins:02}{k} {name}",
-            name = left_user.name
-        );
+        let dt: DateTime<Utc> = left_user.departed_at.into();
+        let entry = conf.lang.left_entry(dt, left_user.was_killed, &left_user.name);
+        let _ = writeln!(output, "{entry}");
     }
 
     conf.append_output(who, &output);
     CommandResult::Ok
-}
-
-/// Owned 12-hour clock components, computed from epoch seconds.
-struct Clock12 {
-    hours: String,
-    minutes: String,
-    seconds: String,
-    ampm: AmPm,
-}
-
-impl Clock12 {
-    fn as_clock_time(&self) -> crate::lang::ClockTime<'_> {
-        crate::lang::ClockTime {
-            hours: &self.hours,
-            minutes: &self.minutes,
-            seconds: &self.seconds,
-            ampm: self.ampm,
-        }
-    }
-}
-
-/// Convert epoch seconds to owned 12-hour clock components.
-fn epoch_to_12h(epoch_secs: u64) -> Clock12 {
-    let day_secs = epoch_secs.checked_rem(86400).unwrap_or(0);
-    let hour =
-        u32::try_from(day_secs.checked_div(3600).unwrap_or(0)).unwrap_or(0);
-    let minute = u32::try_from(
-        day_secs
-            .checked_rem(3600)
-            .unwrap_or(0)
-            .checked_div(60)
-            .unwrap_or(0),
-    )
-    .unwrap_or(0);
-    let second =
-        u32::try_from(day_secs.checked_rem(60).unwrap_or(0)).unwrap_or(0);
-
-    let (h12, ampm) = match hour {
-        0 => (12, AmPm::Am),
-        h @ 1..=11 => (h, AmPm::Am),
-        12 => (12, AmPm::Pm),
-        h => (h.saturating_sub(12), AmPm::Pm),
-    };
-
-    Clock12 {
-        // C upat uses %2d — right-justify hour in 2 chars.
-        hours: format!("{h12:2}"),
-        minutes: format!("{minute:02}"),
-        seconds: format!("{second:02}"),
-        ampm,
-    }
 }
 
 pub fn cmd_xwho(

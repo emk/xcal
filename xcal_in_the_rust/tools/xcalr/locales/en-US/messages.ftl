@@ -203,6 +203,9 @@ leftmsg = { $count } Users have left Xcaliber
 # Left list column header (Trailing)
 lefthdr = Left  Name
 
+# Per-user line in LEFT listing (Bare — caller handles newline)
+leftentry = { $hours }:{ $minutes }{ $killed } { $name }
+
 # Uptime (Wrapped)
 upat = Xcaliber up at { $hours }:{ $minutes }:{ $seconds } { $ampm ->
     [am] { -am }
