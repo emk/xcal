@@ -384,12 +384,20 @@ impl Lang {
     pub fn uptime_with_date(&self, dt: DateTime<Utc>) -> String {
         let mut args = datetime_clock_args(dt);
         let short_year = dt.year().checked_rem(100).unwrap_or(0);
-        args.set("date", format!("{}/{}/{:02}", dt.month(), dt.day(), short_year));
+        args.set(
+            "date",
+            format!("{}/{}/{:02}", dt.month(), dt.day(), short_year),
+        );
         self.format(keys::UPAT2, Some(&args))
     }
 
     /// Format a single line in the LEFT listing.
-    pub fn left_entry(&self, dt: DateTime<Utc>, was_killed: bool, name: &str) -> String {
+    pub fn left_entry(
+        &self,
+        dt: DateTime<Utc>,
+        was_killed: bool,
+        name: &str,
+    ) -> String {
         let (is_pm, h12) = dt.hour12();
         let _ = is_pm; // hour12() for 12h conversion; AM/PM not shown in left listing
         let mut args = FluentArgs::new();
@@ -456,8 +464,9 @@ impl Lang {
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
-    use super::*;
     use chrono::TimeZone;
+
+    use super::*;
 
     fn msgs() -> Lang {
         Lang::new()

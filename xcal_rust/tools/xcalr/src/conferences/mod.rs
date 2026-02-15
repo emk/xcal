@@ -800,10 +800,7 @@ impl Conference {
 
         let (is_submaster, parent_master) =
             if let Some(Some(user)) = self.users.get(idx) {
-                (
-                    matches!(user.role, Role::Submaster { .. }),
-                    user.master,
-                )
+                (matches!(user.role, Role::Submaster { .. }), user.master)
             } else {
                 return None;
             };
@@ -837,8 +834,7 @@ impl Conference {
             .map(|u| u.name.clone())
             .unwrap_or_default();
         for &sub_id in &subordinates {
-            let talking =
-                self.lang.talking_with(parent_master, &parent_name);
+            let talking = self.lang.talking_with(parent_master, &parent_name);
             self.append_output(sub_id, "\n");
             self.append_output(sub_id, &talking);
             self.flush_output(sub_id);

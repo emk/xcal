@@ -82,9 +82,8 @@ pub fn cmd_kill(
         }
 
         let target_idx = usize::from(target_id.0);
-        let (name, target_master) = conf.users[target_idx]
-            .as_ref()
-            .map_or_else(
+        let (name, target_master) =
+            conf.users[target_idx].as_ref().map_or_else(
                 || (String::new(), UserId(0)),
                 |u| (u.name.clone(), u.master),
             );

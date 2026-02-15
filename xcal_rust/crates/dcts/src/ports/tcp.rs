@@ -17,7 +17,7 @@ use miette::Report;
 use tokio::{
     io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
     net::{tcp::OwnedWriteHalf, TcpListener, TcpStream},
-    sync::mpsc,
+    sync::{mpsc, Notify},
 };
 use tracing::{debug, trace, warn};
 
@@ -35,6 +35,8 @@ pub struct TcpPort {
     writer_tx: Option<mpsc::Sender<Bytes>>,
     /// Shared flag for disconnect coordination between reader and writer.
     shutdown: Arc<AtomicBool>,
+    /// Notifies the reader task to stop when the port is shut down.
+    shutdown_notify: Arc<Notify>,
 }
 
 impl Port for TcpPort {
@@ -65,6 +67,8 @@ impl Port for TcpPort {
         self.shutdown.store(true, Ordering::Relaxed);
         // Drop the sender — the writer task sees a closed channel and exits.
         self.writer_tx.take();
+        // Wake the reader task so it exits its select! loop.
+        self.shutdown_notify.notify_waiters();
         Ok(())
     }
 }
@@ -75,37 +79,44 @@ async fn reader_task(
     port_id: PortId,
     sink: Box<dyn PortMessageSink>,
     disconnected: Arc<AtomicBool>,
+    shutdown_notify: Arc<Notify>,
 ) {
     let mut reader = BufReader::new(stream);
     let mut buf = Vec::new();
 
     loop {
         buf.clear();
-        match reader.read_until(b'\n', &mut buf).await {
-            Ok(0) => {
-                // EOF.
-                debug!(?port_id, "reader: EOF");
-                break;
+        tokio::select! {
+            result = reader.read_until(b'\n', &mut buf) => {
+                match result {
+                    Ok(0) => {
+                        debug!(?port_id, "reader: EOF");
+                        break;
+                    }
+                    Ok(_n) => {
+                        // Strip trailing \r\n or \n.
+                        if buf.last() == Some(&b'\n') {
+                            buf.pop();
+                        }
+                        if buf.last() == Some(&b'\r') {
+                            buf.pop();
+                        }
+                        let input = BytesMut::from(buf.as_slice());
+                        trace!(?port_id, line = %String::from_utf8_lossy(&input), "reader: line");
+                        let msg = PortMessage::InputLine { port_id, input };
+                        if sink.send(msg).await.is_err() {
+                            warn!(?port_id, "reader: sink closed, shutting down");
+                            break;
+                        }
+                    }
+                    Err(e) => {
+                        debug!(?port_id, error = %e, "reader: I/O error");
+                        break;
+                    }
+                }
             }
-            Ok(_n) => {
-                // Strip trailing \r\n or \n.
-                if buf.last() == Some(&b'\n') {
-                    buf.pop();
-                }
-                if buf.last() == Some(&b'\r') {
-                    buf.pop();
-                }
-                let input = BytesMut::from(buf.as_slice());
-                trace!(?port_id, line = %String::from_utf8_lossy(&input), "reader: line");
-                let msg = PortMessage::InputLine { port_id, input };
-                if sink.send(msg).await.is_err() {
-                    // Application dropped the sink — connection is orphaned.
-                    warn!(?port_id, "reader: sink closed, shutting down");
-                    break;
-                }
-            }
-            Err(e) => {
-                debug!(?port_id, error = %e, "reader: I/O error");
+            _ = shutdown_notify.notified() => {
+                debug!(?port_id, "reader: shutdown signal");
                 break;
             }
         }
@@ -168,6 +179,11 @@ async fn writer_task(
             }
         }
     }
+
+    // Shut down the write half so the client sees EOF. Without this,
+    // the reader task's OwnedReadHalf keeps the socket alive and
+    // netcat (etc.) never sees the connection close.
+    let _ = writer.shutdown().await;
 
     // Send Disconnected exactly once across reader + writer.
     // If rx.recv() returned None, the application called shutdown() and
@@ -233,6 +249,7 @@ async fn spawn_connection(
 
     let (writer_tx, writer_rx) = mpsc::channel::<Bytes>(1);
     let disconnected = Arc::new(AtomicBool::new(false));
+    let shutdown_notify = Arc::new(Notify::new());
 
     let tcp_port = TcpPort {
         id: port_id,
@@ -241,6 +258,7 @@ async fn spawn_connection(
         port_address,
         writer_tx: Some(writer_tx),
         shutdown: Arc::clone(&disconnected),
+        shutdown_notify: Arc::clone(&shutdown_notify),
     };
 
     // Send the new port to the application. If the sink is closed,
@@ -263,6 +281,7 @@ async fn spawn_connection(
         port_id,
         reader_sink,
         reader_disconnected,
+        shutdown_notify,
     ));
     tokio::spawn(writer_task(
         write_half,
@@ -299,7 +318,76 @@ fn format_port_address(fantasy_name: &str, addr: SocketAddr) -> String {
 
 #[cfg(test)]
 mod tests {
+    use tokio::{io::AsyncReadExt, net::TcpListener as TokioTcpListener};
+
     use super::*;
+
+    /// A simple sink that collects [`PortMessage`]s via an unbounded channel.
+    #[derive(Clone)]
+    struct TestSink {
+        tx: mpsc::UnboundedSender<PortMessage>,
+    }
+
+    #[async_trait::async_trait]
+    impl PortMessageSink for TestSink {
+        async fn send(&self, msg: PortMessage) -> Result<(), PortMessage> {
+            self.tx.send(msg).map_err(|e| e.0)
+        }
+
+        fn clone_sink(&self) -> Box<dyn PortMessageSink> {
+            Box::new(self.clone())
+        }
+    }
+
+    #[tokio::test]
+    async fn shutdown_closes_client_connection() {
+        // Bind a listener on a random port.
+        let listener = TokioTcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+
+        // Accept one connection in a background task.
+        let accept_handle = tokio::spawn(async move {
+            let (stream, _addr) = listener.accept().await.unwrap();
+            stream
+        });
+
+        // Connect a client.
+        let mut client = TcpStream::connect(addr).await.unwrap();
+
+        // Get the server-side stream.
+        let server_stream = accept_handle.await.unwrap();
+
+        // Set up the test sink.
+        let (tx, mut rx) = mpsc::unbounded_channel();
+        let sink = TestSink { tx };
+
+        // Spawn reader/writer tasks for the server-side connection.
+        let port_id = PortId::new();
+        spawn_connection(
+            server_stream,
+            port_id,
+            "TestPort".to_string(),
+            "test:1234".to_string(),
+            "TestPort 0/0001".to_string(),
+            &sink,
+        )
+        .await;
+
+        // We should receive PortMessage::New with our port.
+        let msg = rx.recv().await.unwrap();
+        let mut port = match msg {
+            PortMessage::New { port } => port,
+            other => panic!("expected New, got {other:?}"),
+        };
+
+        // Shut down the port — this should close the client connection.
+        port.shutdown().unwrap();
+
+        // The client should see EOF.
+        let mut buf = [0u8; 64];
+        let n = client.read(&mut buf).await.unwrap();
+        assert_eq!(n, 0, "expected EOF (0 bytes) from client read");
+    }
 
     #[test]
     fn lf_to_crlf_no_lf() {

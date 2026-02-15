@@ -153,7 +153,8 @@ pub fn cmd_left(
     // C: cmd_left outputs upat (conference start time) first.
     let now = Utc::now();
     let elapsed = conf.started_at.elapsed();
-    let chrono_elapsed = chrono::Duration::from_std(elapsed).unwrap_or_default();
+    let chrono_elapsed =
+        chrono::Duration::from_std(elapsed).unwrap_or_default();
     let start = now.checked_sub_signed(chrono_elapsed).unwrap_or(now);
     let uptime = conf.lang.uptime(start);
 
@@ -180,7 +181,9 @@ pub fn cmd_left(
 
     for left_user in &conf.left {
         let dt: DateTime<Utc> = left_user.departed_at.into();
-        let entry = conf.lang.left_entry(dt, left_user.was_killed, &left_user.name);
+        let entry =
+            conf.lang
+                .left_entry(dt, left_user.was_killed, &left_user.name);
         let _ = writeln!(output, "{entry}");
     }
 

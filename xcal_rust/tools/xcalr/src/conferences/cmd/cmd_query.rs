@@ -87,7 +87,8 @@ pub fn cmd_version(
 fn output_time_section(conf: &mut Conference, who: UserId) {
     let now = Utc::now();
     let elapsed = Instant::now().saturating_duration_since(conf.started_at);
-    let chrono_elapsed = chrono::Duration::from_std(elapsed).unwrap_or_default();
+    let chrono_elapsed =
+        chrono::Duration::from_std(elapsed).unwrap_or_default();
     let start = now.checked_sub_signed(chrono_elapsed).unwrap_or(now);
 
     let uptime_msg = conf.lang.uptime_with_date(start);

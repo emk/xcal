@@ -51,9 +51,8 @@ async fn main() -> Result<(), Report> {
     match cli.command {
         Commands::Serve { tcp } => {
             let addr = tcp.unwrap_or_else(|| {
-                "127.0.0.1:2456"
-                    .parse()
-                    .expect("valid default address")
+                #[allow(clippy::expect_used)]
+                "127.0.0.1:2456".parse().expect("valid default address")
             });
             let listener = TcpListener::bind(addr)
                 .await
