@@ -133,7 +133,7 @@ Similar rules apply to the Rust server, if we run it separately.
 The Rust server can be run locally in TCP mode as follows:
 
 ```sh
-cd xcal_in_the_rust && cargo run -p xcalr -- serve --tcp 127.0.0.1:2457
+cd xcal_rust && cargo run -p xcalr -- serve --tcp 127.0.0.1:2457
 ```
 
 This can be used to run `xcal-test check` against a live Rust server, for final integration test confirmation.

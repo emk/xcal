@@ -27,9 +27,9 @@ struct Cli {
 enum Commands {
     /// Start the conference server.
     Serve {
-        /// TCP address to listen on.
-        #[arg(long = "tcp")]
-        tcp: SocketAddr,
+        /// TCP address to listen on (default: 127.0.0.1:2456).
+        #[arg(long = "tcp", default_missing_value = "127.0.0.1:2456", num_args = 0..=1, require_equals = true)]
+        tcp: Option<SocketAddr>,
     },
 }
 
@@ -50,10 +50,15 @@ async fn main() -> Result<(), Report> {
 
     match cli.command {
         Commands::Serve { tcp } => {
-            let listener = TcpListener::bind(tcp)
+            let addr = tcp.unwrap_or_else(|| {
+                "127.0.0.1:2456"
+                    .parse()
+                    .expect("valid default address")
+            });
+            let listener = TcpListener::bind(addr)
                 .await
-                .map_err(|e| miette::miette!("failed to bind {tcp}: {e}"))?;
-            info!("listening on {tcp}");
+                .map_err(|e| miette::miette!("failed to bind {addr}: {e}"))?;
+            info!("listening on {addr}");
 
             let mut app = XcaliberApp::new();
             let sink = app.port_message_sink();

@@ -8,13 +8,10 @@ Rust CLI tool that reads a JSONL script, executes it against a TCP server (the
 C implementation), and saves per-connection transcripts. This also establishes
 the Rust workspace that will later house the rewrite itself.
 
-The TV Tropes reference gives us our workspace name: `xcal_in_the_rust`.
-
-
 ## Workspace structure
 
 ```
-xcal_in_the_rust/
+xcal_rust/
   Cargo.toml                          # workspace root
   crates/
     xcal_test_tools/
@@ -33,7 +30,7 @@ xcal_in_the_rust/
       hello_in.jsonl                  # first tracer bullet script
 ```
 
-Created under `/home/emk/w/src/xcal/xcal_in_the_rust/`.
+Created under `/home/emk/w/src/xcal/xcal_rust/`.
 
 
 ## Crate: `xcal_test_tools` (library)

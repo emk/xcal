@@ -23,7 +23,7 @@ Xcaliber Mark II is a multi-user conference (chat) server written in C over Chri
 
 ### Essential Rust files
 
-- `xcal_in_the_rust/`: Rust workspace — tooling, maybe someday a port.
+- `xcal_rust/`: Rust workspace — tooling, maybe someday a port.
     - `crates/`: Rust library crates.
         - `xcal_test_tools/`: Data structures for JSONL protocol testing language, plus support code. Does not include networking support.
         - `dcts/`: A very basic DCTS "OS" layer. Mostly just handles DCTS I/O "ports."
@@ -47,7 +47,7 @@ Note that the C server is a **global** resource, and it will not give consistent
 ### Running a script
 
 ```sh
-cd xcal_in_the_rust
+cd xcal_rust
 cargo run -p xcal-test -- run tests/fixtures/hello/in.jsonl
 ```
 
@@ -68,7 +68,7 @@ cargo run -p xcal-test -- run tests/fixtures/hello/in.jsonl --stdout
 Re-run a script and diff the live output against previously-saved transcripts:
 
 ```sh
-cd xcal_in_the_rust
+cd xcal_rust
 cargo run -p xcal-test -- check tests/fixtures/hello/in.jsonl
 ```
 
@@ -95,7 +95,7 @@ The normalizer is loaded automatically by `check` from `normalize.toml` in the t
 Run all fixtures in a directory and report aggregate results:
 
 ```sh
-cd xcal_in_the_rust
+cd xcal_rust
 cargo run -p xcal-test -- check-all tests/fixtures/
 ```
 
@@ -180,7 +180,7 @@ Within the project root directory, you have broad privileges to work inside the 
 
 ## Rust lint policy
 
-The workspace sets several clippy lints to `deny` in `xcal_in_the_rust/Cargo.toml`. These are `deny` rather than `forbid` only because `forbid` breaks derive macros. **Treat them as `forbid` in our code:**
+The workspace sets several clippy lints to `deny` in `xcal_rust/Cargo.toml`. These are `deny` rather than `forbid` only because `forbid` breaks derive macros. **Treat them as `forbid` in our code:**
 
 - **`arithmetic_side_effects`**: Never `#[allow]` this. Use `checked_*`, `saturating_*`, or `wrapping_*` methods instead.
 - **`cast_possible_truncation`**, **`cast_possible_wrap`**, **`cast_sign_loss`**: Never `#[allow]` these. Never use `as` for integer conversions. Use `From`/`Into` for infallible widening, `TryFrom` with `?` or `.map_err()` for fallible conversions. Use `.expect()` only when the value is provably in range at compile time (e.g. a constant-length table index).
